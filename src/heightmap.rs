@@ -18,4 +18,10 @@ impl<T> Heightmap<T> {
             inner: Dmatrix::new(),
         }
     }
+
+    pub fn init_heightmap() -> Self {
+        heights = Dmatrix::from_fn()
+    }
+
+    fn midpnt_displacement(&self) {}
 }
