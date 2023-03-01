@@ -5,7 +5,7 @@ use std::net::TcpListener;
 pub fn run(listener: TcpListener) -> Result<Server, std::io::Error> {
     let server = HttpServer::new(|| {
         App::new()
-            .route("/height_map", web::get().to(init_heightmap))
+            .route("/height_map", web::post().to(init_heightmap))
             .route("/health_check", web::get().to(health_check))
     })
     .listen(listener)?
@@ -17,6 +17,12 @@ async fn health_check() -> HttpResponse {
     HttpResponse::Ok().finish()
 }
 
-async fn init_heightmap() -> HttpResponse {
+#[derive(serde::Deserialize)]
+struct FormData {
+    size: i32,
+    nsubdivs: i32,
+}
+
+async fn init_heightmap(_form: web::Form<FormData>) -> HttpResponse {
     HttpResponse::Ok().finish()
 }
