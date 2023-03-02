@@ -1,5 +1,5 @@
 use std::net::TcpListener;
-use terrain_gen_api::run;
+use terrain_gen_api::startup::run;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
