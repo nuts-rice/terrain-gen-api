@@ -1,4 +1,6 @@
+/debug
 /target
 Cargo.lock
 .cargo-ok
 .DS_Store
+.env
