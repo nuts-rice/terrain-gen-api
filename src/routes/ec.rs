@@ -1,26 +1,50 @@
 use actix_web::{web, HttpResponse};
 
-pub use core::{
-    fmt,
-    ops::{Add, Mul, Neg},
-    str,
-};
-use std::fmt::{Display, Formatter};
+pub use core::{fmt, str};
+use num_bigint::BigUint as bigint;
 
-#[derive(serde::Deserialize)]
+use std::{
+    fmt::{Display, Formatter},
+    ops::{Add, Mul},
+};
+
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct EC {
-    a: u64,
-    b: u64,
+    pub p: bigint,
+    pub modulus: bigint,
+    pub a2: usize,
+    pub a4: usize,
+    pub a6: usize,
+    pub is_weirstrass: bool,
 }
 
+#[derive(Debug, Clone, PartialEq)]
 pub struct Point {
-    x: u64,
-    y: u64,
+    pub point: Option<FinitePoint>,
+    pub curve: EC,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct FinitePoint {
+    pub x: bigint,
+    pub y: bigint,
+}
+#[derive(serde::Deserialize)]
+pub struct FormData {
+    coeffiecents: Vec<usize>,
 }
 
 impl EC {
-    pub const MODULUS: i32 = 2_i32.pow(256) - 2_i32.pow(32) - 977;
-    pub const ORDER: i32 = 2_i32.pow(256);
+    fn new(p: bigint, modulus: bigint, coeffiecents: &[usize]) -> Self {
+        EC {
+            p,
+            modulus,
+            a2: coeffiecents[0],
+            a4: coeffiecents[1],
+            a6: coeffiecents[2],
+            is_weirstrass: coeffiecents[0] == 0,
+        }
+    }
 
     pub async fn reals_point_mult() -> HttpResponse {
         HttpResponse::Ok().finish()
@@ -29,20 +53,17 @@ impl EC {
         HttpResponse::Ok().finish()
     }
 
-    pub async fn getInputs(form: web::Form<EC>) -> HttpResponse {
-        let _a = form.a;
-        let _b = form.b;
+    pub async fn getInputs(form: web::Form<FormData>) -> HttpResponse {
+        let _coefficents = &form.coeffiecents;
+
         HttpResponse::Ok().finish()
     }
 
     pub async fn to_repr(self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
-            "order: {}, a: {}, b: {}, p: {}, equation: y^2 = x^3 + 2x + 3",
-            EC::ORDER,
-            self.a,
-            self.b,
-            EC::MODULUS
+            "p: {}, a2: {}, a4: {}, a6: {}, modulus: {}, equation: y^2 = x^3 + 2x + 3",
+            self.p, self.a2, self.a4, self.a6, self.modulus,
         )
     }
 
@@ -56,6 +77,21 @@ impl EC {
 
     pub async fn redraw() {
         todo!()
+    }
+}
+
+impl FinitePoint {
+    fn reduce_modulo(self, modulus: &bigint) -> Self {
+        Self {
+            x: self.x % modulus,
+            y: self.y % modulus,
+        }
+    }
+}
+
+impl Point {
+    fn is_identity(self) -> Self {
+        unimplemented!()
     }
 }
 
@@ -94,5 +130,19 @@ impl Mul for EC {
 
     fn mul(self, _other: Self) -> Self {
         todo!()
+    }
+}
+mod eea {
+
+    fn advance_euclid() {
+        unimplemented!()
+    }
+
+    fn eea() {
+        unimplemented!()
+    }
+
+    pub fn mod_inv_eea() {
+        unimplemented!()
     }
 }

@@ -1,3 +1,4 @@
+#![feature(once_cell)]
 #[cfg(test)]
 mod tests {
     
