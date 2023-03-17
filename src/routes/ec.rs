@@ -1,14 +1,17 @@
 use actix_web::{web, HttpResponse};
+use anyhow::{anyhow, Result};
 
 pub use core::{fmt, str};
 use num_bigint::BigUint as bigint;
 
 use std::{
     fmt::{Display, Formatter},
-    ops::{Add, Mul},
+    ops::{Add, Deref, Mul},
 };
 
-#[derive(Clone, Debug, Default, PartialEq)]
+use crate::{THREE, TWO};
+
+#[derive(Clone, Debug, Default)]
 pub struct EC {
     pub p: bigint,
     pub modulus: bigint,
@@ -78,20 +81,61 @@ impl EC {
     pub async fn redraw() {
         todo!()
     }
+
+    pub async fn contains_inner(&self, point: &FinitePoint) -> bool {
+        let p = &self.modulus;
+        let lhs = point.y.modpow(&TWO, p);
+        //checks for elliptic equation
+        let rhs = point.x.modpow(&THREE, p)
+            + self.a2 * point.x.modpow(&TWO, p)
+            + self.a4 * &point.x
+            + self.a6;
+        lhs == rhs
+    }
 }
 
-impl FinitePoint {
-    fn reduce_modulo(self, modulus: &bigint) -> Self {
-        Self {
-            x: self.x % modulus,
-            y: self.y % modulus,
-        }
+impl PartialEq for EC {
+    fn eq(&self, other: &Self) -> bool {
+        self.a2 == other.a2
+            && self.a4 == other.a4
+            && self.a6 == other.a6
+            && self.modulus == other.modulus
     }
 }
 
 impl Point {
-    fn is_identity(self) -> Self {
-        unimplemented!()
+    pub async fn new(curve: EC, coords: Option<FinitePoint>) -> Result<Self> {
+        match coords {
+            Some(point) => {
+                if curve.contains_inner(&point).await {
+                    let point = Point {
+                        point: Some(point.reduce_modulo(&curve.modulus)),
+                        curve,
+                    };
+                    Ok(point)
+                } else {
+                    Err(anyhow!("point not on curve"))
+                }
+            }
+            None => Ok(Point { point: None, curve }),
+        }
+    }
+}
+
+impl Deref for Point {
+    type Target = FinitePoint;
+
+    fn deref(&self) -> &Self::Target {
+        self.point.as_ref().unwrap()
+    }
+}
+
+impl FinitePoint {
+    pub fn reduce_modulo(self, modulus: &bigint) -> Self {
+        Self {
+            x: self.x % modulus,
+            y: self.y % modulus,
+        }
     }
 }
 
