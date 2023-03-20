@@ -32,9 +32,15 @@ pub struct FinitePoint {
     pub x: bigint,
     pub y: bigint,
 }
+
+//need to convert from int to hex
 #[derive(serde::Deserialize)]
 pub struct FormData {
     coeffiecents: Vec<usize>,
+}
+
+pub async fn init_curve(_form: web::Form<FormData>) -> HttpResponse {
+    HttpResponse::Ok().finish()
 }
 
 impl EC {
@@ -47,13 +53,6 @@ impl EC {
             a6: coeffiecents[2],
             is_weirstrass: coeffiecents[0] == 0,
         }
-    }
-
-    pub async fn reals_point_mult() -> HttpResponse {
-        HttpResponse::Ok().finish()
-    }
-    pub async fn reals_point_add() -> HttpResponse {
-        HttpResponse::Ok().finish()
     }
 
     pub async fn getInputs(form: web::Form<FormData>) -> HttpResponse {
@@ -186,12 +185,13 @@ mod eea {
     }
 
     fn eea(a: bigint, b: bigint) -> (bigint, bigint, bigint) {
-        let (mut old_r, mut rem) = (a, b);
+        let (mut old_r, mut rem) = if a > b { (b, a) } else { (a, b) };
         let (mut old_s, mut coeff_s) = (bigint::from(1u32), bigint::from(0u32));
         let (mut old_t, mut coeff_t) = (bigint::from(0u32), bigint::from(1u32));
 
         while rem != bigint::from(0u32) {
             let quotiant = old_r.clone() / rem.clone();
+
             advance_euclid(&mut rem, &mut old_r, quotiant.clone());
             advance_euclid(&mut coeff_s, &mut old_s, quotiant.clone());
             advance_euclid(&mut coeff_t, &mut old_t, quotiant);
@@ -200,12 +200,28 @@ mod eea {
         (old_r, old_s, old_t)
     }
 
-    pub fn mod_inv_eea(x: bigint, n: bigint) -> Option<bigint> {
+    pub fn mod_inv_eea(x: bigint, n: bigint) -> bigint {
         let (g, x, _) = eea(x, n.clone());
         if g == bigint::from(1u32) {
-            Some((x % n.clone() + n.clone()) % n)
+            let canidate = x % n.clone() + n.clone() % n;
+            dbg!(canidate.clone());
+            canidate
         } else {
-            None
+            bigint::from(0u32)
         }
+    }
+}
+
+//small embedded tests for eea utils
+#[cfg(test)]
+mod tests {
+    use super::{eea::mod_inv_eea, *};
+
+    #[test]
+    fn mod_inv_test() {
+        let right_twentythree = bigint::from(23u32);
+        let right_five = bigint::from(5u32);
+        let left_fourteen = bigint::from(14u32);
+        assert_eq!(left_fourteen, mod_inv_eea(right_twentythree, right_five));
     }
 }
