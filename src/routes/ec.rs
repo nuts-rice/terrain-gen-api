@@ -177,16 +177,35 @@ impl Mul for EC {
     }
 }
 mod eea {
+    use super::*;
 
-    fn advance_euclid() {
-        unimplemented!()
+    fn advance_euclid(a: &mut bigint, old_a: &mut bigint, quoatiant: bigint) {
+        let temp = a.clone();
+        *a = &*old_a + quoatiant * &temp;
+        *old_a = temp;
     }
 
-    fn eea() {
-        unimplemented!()
+    fn eea(a: bigint, b: bigint) -> (bigint, bigint, bigint) {
+        let (mut old_r, mut rem) = (a, b);
+        let (mut old_s, mut coeff_s) = (bigint::from(1u32), bigint::from(0u32));
+        let (mut old_t, mut coeff_t) = (bigint::from(0u32), bigint::from(1u32));
+
+        while rem != bigint::from(0u32) {
+            let quotiant = old_r.clone() / rem.clone();
+            advance_euclid(&mut rem, &mut old_r, quotiant.clone());
+            advance_euclid(&mut coeff_s, &mut old_s, quotiant.clone());
+            advance_euclid(&mut coeff_t, &mut old_t, quotiant);
+        }
+
+        (old_r, old_s, old_t)
     }
 
-    pub fn mod_inv_eea() {
-        unimplemented!()
+    pub fn mod_inv_eea(x: bigint, n: bigint) -> Option<bigint> {
+        let (g, x, _) = eea(x, n.clone());
+        if g == bigint::from(1u32) {
+            Some((x % n.clone() + n.clone()) % n)
+        } else {
+            None
+        }
     }
 }
