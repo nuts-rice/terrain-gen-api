@@ -2,14 +2,14 @@ use actix_web::{web, HttpResponse};
 use anyhow::{anyhow, Result};
 
 pub use core::{fmt, str};
-use num_bigint::BigUint as bigint;
+use num::BigUint as bigint;
 
 use std::{
     fmt::{Display, Formatter},
     ops::{Add, Deref, Mul},
 };
 
-use crate::{THREE, TWO};
+use crate::{ONE, THREE, TWO, ZERO};
 
 #[derive(Clone, Debug, Default)]
 pub struct EC {
@@ -175,39 +175,42 @@ impl Mul for EC {
         todo!()
     }
 }
-mod eea {
+pub mod eea {
+
     use super::*;
 
-    fn advance_euclid(a: &mut bigint, old_a: &mut bigint, quoatiant: bigint) {
+    async fn advance_euclid(a: &mut bigint, old_a: &mut bigint, quoatiant: bigint) {
+        dbg!(&a, &old_a, &quoatiant);
         let temp = a.clone();
         *a = &*old_a + quoatiant * &temp;
         *old_a = temp;
     }
 
-    fn eea(a: bigint, b: bigint) -> (bigint, bigint, bigint) {
+    async fn eea(a: bigint, b: bigint) -> (bigint, bigint, bigint) {
         let (mut old_r, mut rem) = if a > b { (b, a) } else { (a, b) };
-        let (mut old_s, mut coeff_s) = (bigint::from(1u32), bigint::from(0u32));
-        let (mut old_t, mut coeff_t) = (bigint::from(0u32), bigint::from(1u32));
+        assert!(rem > old_r && old_r > *ZERO);
+        let (mut old_s, mut coeff_s) = (ONE.clone(), ZERO.clone());
+        let (mut old_t, mut coeff_t) = (ZERO.clone(), ONE.clone());
 
-        while rem != bigint::from(0u32) {
+        while rem != ZERO.clone() {
             let quotiant = old_r.clone() / rem.clone();
 
-            advance_euclid(&mut rem, &mut old_r, quotiant.clone());
-            advance_euclid(&mut coeff_s, &mut old_s, quotiant.clone());
-            advance_euclid(&mut coeff_t, &mut old_t, quotiant);
+            advance_euclid(&mut rem, &mut old_r, quotiant.clone()).await;
+            advance_euclid(&mut coeff_s, &mut old_s, quotiant.clone()).await;
+            advance_euclid(&mut coeff_t, &mut old_t, quotiant).await;
         }
 
         (old_r, old_s, old_t)
     }
 
-    pub fn mod_inv_eea(x: bigint, n: bigint) -> bigint {
-        let (g, x, _) = eea(x, n.clone());
-        if g == bigint::from(1u32) {
+    pub async fn mod_inv_eea(x: bigint, n: bigint) -> bigint {
+        let (g, x, _) = eea(x, n.clone()).await;
+        if g == ONE.clone() {
             let canidate = x % n.clone() + n.clone() % n;
             dbg!(canidate.clone());
             canidate
         } else {
-            bigint::from(0u32)
+            ZERO.clone()
         }
     }
 }
@@ -217,11 +220,12 @@ mod eea {
 mod tests {
     use super::{eea::mod_inv_eea, *};
 
-    #[test]
-    fn mod_inv_test() {
-        let right_twentythree = bigint::from(23u32);
-        let right_five = bigint::from(5u32);
-        let left_fourteen = bigint::from(14u32);
-        assert_eq!(left_fourteen, mod_inv_eea(right_twentythree, right_five));
+    #[actix_rt::test]
+    async fn mod_inv_test() {
+        todo!();
+        let right_a = bigint::from(397u32);
+        let right_b = bigint::from(2357u32);
+        let left = bigint::from(1603u32);
+        assert_eq!(left, mod_inv_eea(right_a, right_b).await);
     }
 }

@@ -6,6 +6,7 @@ mod tests {
     use std::{net::TcpListener};
     
     
+    
     use tracing::subscriber::set_global_default;
     use tracing_bunyan_formatter::{BunyanFormattingLayer, JsonStorageLayer};
     use tracing_subscriber::{layer::SubscriberExt, EnvFilter, Registry};
@@ -104,5 +105,10 @@ mod tests {
         //TODO: figure form to hex
         //let body = "coefficients=07";
         todo!()
+    }
+
+    #[actix_rt::test]
+    async fn eea_tabular_test() {
+       todo!() 
     }
 }

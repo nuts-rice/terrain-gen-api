@@ -1,6 +1,6 @@
 #![feature(once_cell)]
 use std::sync::LazyLock;
-use num_bigint::BigUint as bigint; 
+use num::BigUint as bigint; 
 
 pub mod configuration;
 pub mod routes;
