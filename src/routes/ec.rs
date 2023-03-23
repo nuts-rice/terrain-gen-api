@@ -1,13 +1,15 @@
 use actix_web::{web, HttpResponse};
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, Ok, Result};
 
 pub use core::{fmt, str};
 use num::BigUint as bigint;
 
 use std::{
     fmt::{Display, Formatter},
-    ops::{Add, Deref, Mul},
+    ops::{Add, Deref, Mul, Neg},
 };
+
+use yew::prelude::*;
 
 use crate::{ONE, THREE, TWO, ZERO};
 
@@ -25,6 +27,13 @@ pub struct EC {
 pub struct Point {
     pub point: Option<FinitePoint>,
     pub curve: EC,
+}
+
+pub enum Msg {
+    Add,
+    Mul,
+    Reset,
+    KeyDown(String),
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -73,7 +82,7 @@ impl EC {
         todo!()
     }
 
-    pub async fn update() {
+    fn update() {
         todo!()
     }
 
@@ -119,6 +128,63 @@ impl Point {
             None => Ok(Point { point: None, curve }),
         }
     }
+
+    pub async fn is_infinite(&self) -> bool {
+        self.point.is_none()
+    }
+
+    pub async fn to_inner(&self) -> Option<&FinitePoint> {
+        self.point.as_ref()
+    }
+}
+
+impl<'a> Neg for &'a Point {
+    type Output = Point;
+
+    fn neg(self) -> Self::Output {
+        todo!()
+    }
+}
+
+//#[async_trait]
+impl Add for Point {
+    type Output = Result<Point>;
+
+    fn add(self, _rhs: Self) -> Self::Output {
+        todo!()
+        /*        if self.curve != rhs.curve {
+            panic!("can't add points on different curves")
+        }
+
+        //0 + Q = Q
+        //identity rule
+        if self.is_infinite().await {
+            return Ok(rhs).unwrap();
+        } else if rhs.is_infinite().await {
+            return Ok(self).unwrap()
+        // P - P = 0
+        } else if self == -&rhs.clone() {
+            return Ok(Point::new(self.curve, None).await.unwrap());
+        }
+        //P + P =
+        let p = &self.curve.modulus;
+        let ll: &bigint = if self == rhs {
+            if self.y == *ZERO {
+                return Ok(Point::new(self.curve, None).await.unwrap());
+            }
+            let l = TWO.clone() * self.y.clone();
+            let l_inv: bigint = mod_inv_eea(l, p.clone()).await;
+            &((&THREE.clone() * &self.x.pow(2) + TWO.clone() * self.curve.a2 * &self.x + self.curve.a4) * l_inv)
+        } else {
+            let l_inv = mod_inv_eea(&rhs.x - &self.x, p.clone()).await;
+            &((&rhs.y - &self.y) * l_inv)
+        };
+
+        let x = ll.pow(2) - self.curve.a2 - &self.x - &rhs.x;
+        let y = ll * (&self.x - &x)   - &self.y;
+        Point::new(self.curve.clone(), Some(FinitePoint {x: x % p, y: y % p})).await
+        */
+    }
 }
 
 impl Deref for Point {
@@ -126,6 +192,29 @@ impl Deref for Point {
 
     fn deref(&self) -> &Self::Target {
         self.point.as_ref().unwrap()
+    }
+}
+
+impl Component for Point {
+    type Message = Msg;
+    type Properties = ();
+
+    fn create(_ctx: &Context<Self>) -> Self {
+        Self {
+            point: Some(FinitePoint {
+                x: bigint::from(0u32),
+                y: bigint::from(0u32),
+            }),
+            curve: EC::new(bigint::from(0u32), bigint::from(0u32), &[0]),
+        }
+    }
+
+    fn view(&self, _ctx: &Context<Self>) -> Html {
+        todo!();
+        //        html! {
+        //            <div>
+        //                <p>{self.point}</p>
+        //            </div>
     }
 }
 
@@ -221,11 +310,11 @@ mod tests {
     use super::{eea::mod_inv_eea, *};
 
     #[actix_rt::test]
-    async fn mod_inv_test() {
+    fn mod_inv_test() {
         todo!();
         let right_a = bigint::from(397u32);
         let right_b = bigint::from(2357u32);
         let left = bigint::from(1603u32);
-        assert_eq!(left, mod_inv_eea(right_a, right_b).await);
+        assert_eq!(left, mod_inv_eea(right_a, right_b));
     }
 }
