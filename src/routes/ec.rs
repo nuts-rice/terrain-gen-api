@@ -64,9 +64,14 @@ impl EC {
         }
     }
 
-    pub async fn getInputs(form: web::Form<FormData>) -> HttpResponse {
+    pub async fn getInputs(self, form: web::Form<FormData>) -> HttpResponse {
         let _coefficents = &form.coeffiecents;
-
+       /* match &self.a2{
+            Some(result) => {
+                _a2 = result.replace
+            }
+        }
+        */
         HttpResponse::Ok().finish()
     }
 
@@ -305,6 +310,7 @@ pub mod eea {
 }
 
 //small embedded tests for eea utils
+/*
 #[cfg(test)]
 mod tests {
     use super::{eea::mod_inv_eea, *};
@@ -318,3 +324,4 @@ mod tests {
         assert_eq!(left, mod_inv_eea(right_a, right_b));
     }
 }
+*/

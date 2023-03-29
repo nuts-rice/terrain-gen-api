@@ -100,6 +100,8 @@ mod tests {
 
     #[actix_rt::test]
     async fn curve_with_valid_parameters() {
+        let address = spawn_app();
+        let client = reqwest::Client::new(); 
         //let address = spawn_app();
         //let client = reqwest::Client::new();
         //TODO: figure form to hex
