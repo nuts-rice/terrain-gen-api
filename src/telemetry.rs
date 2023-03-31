@@ -5,7 +5,7 @@ use tracing_log::LogTracer;
 use tracing_subscriber::fmt::MakeWriter;
 use tracing_subscriber::{layer::SubscriberExt, EnvFilter, Registry};
 
-pub fn get_heightmap<Sink>(
+pub fn get_subscriber<Sink>(
     size: i32,
     env_filter: String,
     sink: Sink,
@@ -22,7 +22,7 @@ where
         .with(formattting_layer)
 }
 
-pub fn init_heightmap(subscriber: impl Subscriber + Sync + Send) {
+pub fn init_subscriber(subscriber: impl Subscriber + Sync + Send) {
     LogTracer::init().expect("failed to set logger");
     set_global_default(subscriber).expect("failed to set subscriber");
 }
