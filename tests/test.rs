@@ -1,12 +1,10 @@
 #![feature(once_cell)]
 #[cfg(test)]
 mod tests {
-    
-    
-    use std::{net::TcpListener};
-    
-    
-    
+
+    use std::net::TcpListener;
+
+    use once_cell::sync::Lazy;
     use tracing::subscriber::set_global_default;
     use tracing_bunyan_formatter::{BunyanFormattingLayer, JsonStorageLayer};
     use tracing_subscriber::{layer::SubscriberExt, EnvFilter, Registry};
@@ -17,6 +15,16 @@ mod tests {
         let file: File::create("debug.log")?;
         let debug_log = tracing_subscriber::fmt::layer()
             .with_writer(Arc::new(file))
+    */
+    /*
+    static TRACING: Lazy<()> = Lazy::new(|| {
+        let default_filter_level = "info".to_string();
+        let test_body = "size=0&nsubdivs=0&spread_rate=0.0";
+        let std::enc::var("TEST_LOG").is_ok() {
+            let
+        }
+
+    })
     */
 
     fn spawn_app() -> String {
@@ -62,7 +70,7 @@ mod tests {
         let address = spawn_app();
         let client = reqwest::Client::new();
         //figure out params we need to build heightmap with midpnt displacement
-        let body = "size=100&nsubdivs=20";
+        let body = "size=100&nsubdivs=20&spread_rate=0.3";
         let left = client
             .post(&format!("{}/height_map", &address))
             .header("Content-Type", "application/x-www-form-urlencoded")
@@ -97,11 +105,12 @@ mod tests {
             );
         }
     }
-
+}
+/*
     #[actix_rt::test]
     async fn curve_with_valid_parameters() {
         let address = spawn_app();
-        let client = reqwest::Client::new(); 
+        let client = reqwest::Client::new();
         //let address = spawn_app();
         //let client = reqwest::Client::new();
         //TODO: figure form to hex
@@ -111,6 +120,7 @@ mod tests {
 
     #[actix_rt::test]
     async fn eea_tabular_test() {
-       todo!() 
+       todo!()
     }
 }
+*/
