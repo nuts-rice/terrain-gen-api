@@ -8,7 +8,7 @@ use rapier3d::prelude::*;
 pub struct FormData {
     size: i32,
     nsubdivs: i32,
-    spreadRate: f32,
+    spread_rate: f32,
 }
 
 #[allow(clippy::async_yields_async)]
@@ -18,7 +18,7 @@ pub struct FormData {
     fields(
             heightmap_size = %_form.size,
             heightmap_nsubdivs = %_form.nsubdivs,
-            heightmap_spreadrate = %_form.spreadRate,
+            heightmap_spread_rate = %_form.spread_rate,
         )
 )]
 
@@ -27,7 +27,7 @@ pub async fn serve_heightmap(_form: web::Form<FormData>) -> HttpResponse {
     let new_heightmap = Heightmap {
         size: Vector::new(0, 0, 0),
         spread: 0.0,
-        spreadRate: 0.0,
+        spread_rate: 0.0,
         //        inner: rapier3d::na::dmatrix![0, 0, 0,
         //        0, 0, 0,
         //        0, 0, 0],
@@ -38,10 +38,11 @@ pub async fn serve_heightmap(_form: web::Form<FormData>) -> HttpResponse {
     }
 }
 
+#[derive(Debug)]
 struct Heightmap {
     size: Vector3<i32>,
     spread: f32,
-    spreadRate: f32,
+    spread_rate: f32,
     //    inner: rapier3d::na::DMatrix<T>,
 }
 
@@ -51,10 +52,12 @@ impl Heightmap {
             //TODO: figure parsing size and inner
             size: Vector3::new(0, 0, 0),
             spread: 0.0,
-            spreadRate: 0.0,
+            spread_rate: 0.0,
             //          inner,
         }
     }
+
+    #[tracing::instrument(name = "randomizing heightmap")]
 
     pub async fn generate_heightmap(&self) -> Result<(), Error> {
         let _ = &Self::midpnt_displacement().await.map_err(|e| {

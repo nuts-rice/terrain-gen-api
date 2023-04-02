@@ -72,14 +72,14 @@ mod tests {
         let client = reqwest::Client::new();
         //figure out params we need to build heightmap with midpnt displacement
         let body = "size=100&nsubdivs=20&spread_rate=0.3";
-        let left = client
+        let right = client
             .post(&format!("{}/height_map", &app.address))
             .header("Content-Type", "application/x-www-form-urlencoded")
             .body(body)
             .send()
             .await
             .expect("Failed to execute request");
-        assert_eq!(200, left.status().as_u16());
+        assert_eq!(200, right.status().as_u16());
     }
 
     #[tokio::test]
