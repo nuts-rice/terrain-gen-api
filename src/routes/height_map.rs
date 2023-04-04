@@ -1,14 +1,15 @@
 use actix_web::{web, HttpResponse};
 
 use anyhow::Error;
-use rapier3d::na::Vector3;
-use rapier3d::prelude::*;
+use ndarray::{Array2, Axis};
+
+//use rapier3d::na::{Vector3, SquareMatrix};
+//use rapier3d::parry::utils::Array2;
 
 #[derive(serde::Deserialize)]
 pub struct FormData {
-    size: i32,
-    nsubdivs: i32,
-    spread_rate: f32,
+    size: usize,
+    spread_rate: f64,
 }
 
 #[allow(clippy::async_yields_async)]
@@ -17,7 +18,6 @@ pub struct FormData {
     skip(_form),
     fields(
             heightmap_size = %_form.size,
-            heightmap_nsubdivs = %_form.nsubdivs,
             heightmap_spread_rate = %_form.spread_rate,
         )
 )]
@@ -25,12 +25,9 @@ pub struct FormData {
 pub async fn serve_heightmap(_form: web::Form<FormData>) -> HttpResponse {
     //TODO: parse this in and inner
     let new_heightmap = Heightmap {
-        size: Vector::new(0, 0, 0),
-        spread: 0.0,
-        spread_rate: 0.0,
-        //        inner: rapier3d::na::dmatrix![0, 0, 0,
-        //        0, 0, 0,
-        //        0, 0, 0],
+        size: _form.size,
+        spread_rate: _form.spread_rate,
+        inner: Array2::from_elem((_form.size + 1, _form.size + 1), 0.0),
     };
     match Heightmap::generate_heightmap(&new_heightmap).await {
         Ok(_) => HttpResponse::Ok().finish(),
@@ -40,34 +37,45 @@ pub async fn serve_heightmap(_form: web::Form<FormData>) -> HttpResponse {
 
 #[derive(Debug)]
 struct Heightmap {
-    size: Vector3<i32>,
-    spread: f32,
-    spread_rate: f32,
-    //    inner: rapier3d::na::DMatrix<T>,
+    size: usize,
+    spread_rate: f64,
+    inner: Array2<f64>,
 }
 
 impl Heightmap {
-    fn new() -> Self {
+    fn new(&self) -> Self {
         Self {
             //TODO: figure parsing size and inner
-            size: Vector3::new(0, 0, 0),
-            spread: 0.0,
+            size: 9,
             spread_rate: 0.0,
-            //          inner,
+            inner: Array2::from_elem((&self.size + 1, &self.size + 1), 0.0),
         }
     }
 
     #[tracing::instrument(name = "randomizing heightmap")]
 
     pub async fn generate_heightmap(&self) -> Result<(), Error> {
-        let _ = &Self::midpnt_displacement().await.map_err(|e| {
+        let _ = self.midpnt_displacement().await.map_err(|e| {
             tracing::error!("failed to midpoint displacement:  {:?}", e);
             e
         })?;
         Ok(())
     }
 
-    pub async fn midpnt_displacement() -> Result<(), Error> {
+    pub async fn midpnt_displacement(&self) -> Result<(), Error> {
+        let _rng = rand::thread_rng();
+        let step = &self.size;
+        while step > &1 {
+            for i in (step / 2..self.inner.len_of(Axis(0)) - 1).step_by(*step) {
+                for j in (step / 2..self.inner.len_of(Axis(1)) - 1).step_by(*step) {
+                    let _square_average = (self.inner[[i - step / 2, j - step / 2]]
+                        + self.inner[[i - step / 2, j + step / 2]]
+                        + self.inner[[i + step / 2, j - step / 2]]
+                        + self.inner[[i + step / 2, j + step / 2]])
+                        / 4.0;
+                }
+            }
+        }
         Ok(())
     }
 }

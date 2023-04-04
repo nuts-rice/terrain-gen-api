@@ -280,13 +280,29 @@ pub mod eea {
         *old_a = temp;
     }
 
-    async fn eea(a: bigint, b: bigint) -> (bigint, bigint, bigint) {
+/*    
+    pub async fn inverse(a: bigint) {
+        const M: bigint = bigint::from(1u32);
+        let (mut b, mut x, mut y) = (M.clone(), ONE.clone(), ZERO.clone());
+        while (a != ONE.clone()) {
+            const quoatiant: bigint = b/a;
+            y -= quoatiant * x;
+            b %= a;
+            std::mem::swap(&a, &b);
+            std::mem::swap(&x, &y);
+        }
+        return (x % M + M) % M;
+
+    }
+*/    
+
+    pub async fn eea(a: bigint, b: bigint) -> (bigint, bigint, bigint) {
         let (mut old_r, mut rem) = if a > b { (b, a) } else { (a, b) };
         assert!(rem > old_r && old_r > *ZERO);
         let (mut old_s, mut coeff_s) = (ONE.clone(), ZERO.clone());
         let (mut old_t, mut coeff_t) = (ZERO.clone(), ONE.clone());
 
-        while rem != ZERO.clone() {
+        while rem != *ONE {
             let quotiant = old_r.clone() / rem.clone();
 
             advance_euclid(&mut rem, &mut old_r, quotiant.clone()).await;
@@ -298,30 +314,45 @@ pub mod eea {
     }
 
     pub async fn mod_inv_eea(x: bigint, n: bigint) -> bigint {
-        let (g, x, _) = eea(x, n.clone()).await;
-        if g == ONE.clone() {
-            let canidate = x % n.clone() + n.clone() % n;
+        let (_g, x, _) = eea(x, n.clone()).await;
+        let canidate = (x % n.clone() + n.clone()) % n.clone();
+        if canidate != *ONE {
             dbg!(canidate.clone());
-            canidate
+            &n - canidate
         } else {
-            ZERO.clone()
+            canidate
         }
     }
 }
+    
+
 
 //small embedded tests for eea utils
 /*
 #[cfg(test)]
 mod tests {
-    use super::{eea::mod_inv_eea, *};
+    use super::*;
+    use crate::routes::eea::mod_inv_eea;
+        //eea::mod_inv_eea, 
 
+    
     #[actix_rt::test]
-    fn mod_inv_test() {
-        todo!();
+    async fn mod_inv_test() {
         let right_a = bigint::from(397u32);
         let right_b = bigint::from(2357u32);
         let left = bigint::from(1603u32);
-        assert_eq!(left, mod_inv_eea(right_a, right_b));
+        assert_eq!(left, mod_inv_eea(right_a, right_b).await);
+    }
+    
+    
+
+    #[actix_rt::test]
+    async fn eea_test() {
+        let right_a = bigint::from(68u32);
+        let right_b = bigint::from(20u32);
+        let right_eea = eea(right_a, right_b).await;
+        assert_eq!(bigint::from(4u32), right_eea.0)
     }
 }
 */
+

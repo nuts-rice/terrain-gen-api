@@ -1,10 +1,10 @@
-use once_cell::sync::Lazy;
-use secrecy::ExposeSecret;
-use std::fmt::format;
+
+
+
 use std::net::TcpListener;
 use terrain_gen_api::startup::run;
 use terrain_gen_api::telemetry::{get_subscriber, init_subscriber};
-use uuid::Uuid;
+
 
 #[tokio::main]
 async fn main() -> std::io::Result<()> {
