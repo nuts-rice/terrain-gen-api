@@ -71,7 +71,7 @@ mod tests {
         let app = spawn_app().await;
         let client = reqwest::Client::new();
         //figure out params we need to build heightmap with midpnt displacement
-        let body = "size=100&nsubdivs=20&spread_rate=0.3";
+        let body = "size=100&spread_rate=0.3";
         let right = client
             .post(&format!("{}/height_map", &app.address))
             .header("Content-Type", "application/x-www-form-urlencoded")
@@ -88,7 +88,7 @@ mod tests {
         let client = reqwest::Client::new();
         let should_panic = vec![
             ("size=100", "missing number of subdivisions"),
-            ("nsubdivs=20", "missing size"),
+            ("spread_rate", "missing spread rate"),
         ];
         for (element, error_message) in should_panic {
             let left = client
