@@ -1,5 +1,4 @@
-use terrain_gen_api::startup::run;
-use terrain_gen_api::telemetry::{get_subscriber, init_subscriber};
+use terrain_gen_api::telemetry::get_subscriber;
 
 #[feature(once_cell)]
 #[cfg(test)]
@@ -9,9 +8,6 @@ mod tests {
 
     use once_cell::sync::Lazy;
     use terrain_gen_api::telemetry::init_subscriber;
-    use tracing::subscriber::set_global_default;
-    use tracing_bunyan_formatter::{BunyanFormattingLayer, JsonStorageLayer};
-    use tracing_subscriber::{layer::SubscriberExt, EnvFilter, Registry};
 
     /*
         let stdout_log = tracing_subscriber::fmt::layer().pretty();
@@ -71,7 +67,7 @@ mod tests {
         let app = spawn_app().await;
         let client = reqwest::Client::new();
         //figure out params we need to build heightmap with midpnt displacement
-        let body = "size=100&spread_rate=0.3";
+        let body = "size=99&spread_rate=0.3";
         let right = client
             .post(&format!("{}/height_map", &app.address))
             .header("Content-Type", "application/x-www-form-urlencoded")

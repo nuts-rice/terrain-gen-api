@@ -5,7 +5,7 @@ use terrain_gen_api::telemetry::{get_subscriber, init_subscriber};
 
 #[tokio::main]
 async fn main() -> std::io::Result<()> {
-    let subscriber = get_subscriber(1.into(), "info".into(), std::io::stdout);
+    let subscriber = get_subscriber(1, "info".into(), std::io::stdout);
     init_subscriber(subscriber);
     let configuration = get_config().expect("failed to read configuration");
     let address = format!(

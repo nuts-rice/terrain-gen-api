@@ -44,19 +44,19 @@ struct Heightmap {
 }
 
 impl Heightmap {
-    fn new(&self) -> Self {
+    fn new(size: usize, _spread_rate: f64) -> Self {
         Self {
             //TODO: figure parsing size and inner
             size: 9,
             spread_rate: 0.0,
-            inner: Array::from_elem((&self.size + 1, &self.size + 1), 0.0),
+            inner: Array::from_elem((size + 1, size + 1), 0.0),
         }
     }
 
     #[tracing::instrument(name = "randomizing heightmap")]
 
     pub async fn generate_heightmap(&mut self) -> Result<(), Error> {
-        let _ = self.midpnt_displacement().await.map_err(|e| {
+        self.midpnt_displacement().await.map_err(|e| {
             tracing::error!("failed to midpoint displacement:  {:?}", e);
             e
         })?;
