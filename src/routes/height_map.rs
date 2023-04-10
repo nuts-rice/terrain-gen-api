@@ -7,6 +7,7 @@ use rand::Rng;
 //use rapier3d::na::{Vector3, SquareMatrix};
 //use rapier3d::parry::utils::self.inner2;
 
+
 #[derive(serde::Deserialize)]
 pub struct FormData {
     size: usize,
@@ -54,7 +55,6 @@ impl Heightmap {
     }
 
     #[tracing::instrument(name = "randomizing heightmap")]
-
     pub async fn generate_heightmap(&mut self) -> Result<(), Error> {
         self.midpnt_displacement().await.map_err(|e| {
             tracing::error!("failed to midpoint displacement:  {:?}", e);
