@@ -7,34 +7,51 @@ use rand::Rng;
 //use rapier3d::na::{Vector3, SquareMatrix};
 //use rapier3d::parry::utils::self.inner2;
 
+use crate::domain::{HeightmapSize, HeightmapSpreadRate, NewHeightmap};
+use std::convert::TryFrom;
 
 #[derive(serde::Deserialize)]
 pub struct FormData {
-    size: usize,
-    spread_rate: f64,
+    size: String,
+    spread_rate: String,
+}
+
+impl TryFrom<FormData> for NewHeightmap {
+    type Error = String;
+
+    fn try_from(value: FormData) -> Result<Self, Self::Error> {
+        let size = HeightmapSize::parse(&value.size)?;
+        let spread_rate = HeightmapSpreadRate::parse(&value.spread_rate)?;
+        Ok(Self { size, spread_rate })
+    }
 }
 
 #[allow(clippy::async_yields_async)]
 #[tracing::instrument(
     name = "generating a new heightmap",
-    skip(_form),
+    skip(form),
     fields(
-            heightmap_size = %_form.size,
-            heightmap_spread_rate = %_form.spread_rate,
+            heightmap_size = %form.size,
+            heightmap_spread_rate = %form.spread_rate,
         )
 )]
 
-pub async fn serve_heightmap(_form: web::Form<FormData>) -> HttpResponse {
+pub async fn serve_heightmap(form: web::Form<FormData>) -> HttpResponse {
     //TODO: parse this in and inner
-    let mut new_heightmap = Heightmap {
-        size: _form.size,
-        spread_rate: _form.spread_rate,
-        inner: Array::from_elem((_form.size + 1, _form.size + 1), 0.0),
+    let size = match HeightmapSize::parse(&form.0.size) {
+        Ok(size) => size,
+        Err(_) => return HttpResponse::BadRequest().finish(),
     };
-    match Heightmap::generate_heightmap(&mut new_heightmap).await {
-        Ok(_) => HttpResponse::Ok().finish(),
-        Err(_) => HttpResponse::InternalServerError().finish(),
-    }
+    let spread_rate = match HeightmapSpreadRate::parse(&form.0.spread_rate) {
+        Ok(spread_rate) => spread_rate,
+        Err(_) => return HttpResponse::BadRequest().finish(),
+    };
+    let _new_heightmap = NewHeightmap { size, spread_rate };
+    todo!()
+    //    match Heightmap::generate_heightmap(&mut new_heightmap).await {
+    //        Ok(_) => HttpResponse::Ok().finish(),
+    //        Err(_) => HttpResponse::InternalServerError().finish(),
+    //    }
 }
 
 #[derive(Debug)]
