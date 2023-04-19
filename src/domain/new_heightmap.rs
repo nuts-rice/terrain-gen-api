@@ -56,3 +56,9 @@ impl AsRef<f64> for HeightmapSpreadRate {
         &self.0
     }
 }
+
+impl NewHeightmap {
+    pub fn create_new_heightmap(size: HeightmapSize, spread_rate: HeightmapSpreadRate) -> NewHeightmap {
+        NewHeightmap {size, spread_rate}
+    }
+}

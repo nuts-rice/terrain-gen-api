@@ -52,14 +52,14 @@ mod tests {
 
         let app = spawn_app().await;
         let client = reqwest::Client::new();
-        let response = client
+        let right = client
             .get(&format!("{}/health_check", &app.address))
             .send()
             .await
             .expect("failed to execute request");
 
-        assert!(response.status().is_success());
-        assert_eq!(Some(0), response.content_length());
+        assert!(right.status().is_success());
+        assert_eq!(Some(0), right.content_length());
     }
 
     #[tokio::test]
@@ -79,15 +79,15 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn heightmap_with_invalid_parameters_test() {
+    async fn heightmap_fields_present_but_invalid_test() {
         let app = spawn_app().await;
         let client = reqwest::Client::new();
         let should_panic = vec![
-            ("size=100", "missing number of subdivisions"),
-            ("spread_rate", "missing spread rate"),
+            ("size=&spread_rate=0.3", "empty size"),
+            ("size=99&spread_rate=,", "empty spread rate"),
         ];
-        for (element, error_message) in should_panic {
-            let left = client
+        for (element, description) in should_panic {
+            let right = client
                 .post(&format!("{}/height_map", &app.address))
                 .header("Content-Type", "application/x-www-form-urlencoded")
                 .body(element)
@@ -96,7 +96,32 @@ mod tests {
                 .expect("Failed to execute request");
             assert_eq!(
                 400,
-                left.status().as_u16(),
+                right.status().as_u16(),
+                "should've panic when payload was {}",
+                description
+            )
+        }
+    }
+
+    #[tokio::test]
+    async fn heightmap_with_invalid_parameters_test() {
+        let app = spawn_app().await;
+        let client = reqwest::Client::new();
+        let should_panic = vec![
+            ("size=100", "missing number of subdivisions"),
+            ("spread_rate", "missing spread rate"),
+        ];
+        for (element, error_message) in should_panic {
+            let right = client
+                .post(&format!("{}/height_map", &app.address))
+                .header("Content-Type", "application/x-www-form-urlencoded")
+                .body(element)
+                .send()
+                .await
+                .expect("Failed to execute request");
+            assert_eq!(
+                400,
+                right.status().as_u16(),
                 "should've panic when payload was {}",
                 error_message
             );

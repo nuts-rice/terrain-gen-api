@@ -19,10 +19,10 @@ pub struct FormData {
 impl TryFrom<FormData> for NewHeightmap {
     type Error = String;
 
-    fn try_from(value: FormData) -> Result<Self, Self::Error> {
+    fn try_from(value: FormData) -> Result<NewHeightmap, Self::Error> {
         let size = HeightmapSize::parse(&value.size)?;
         let spread_rate = HeightmapSpreadRate::parse(&value.spread_rate)?;
-        Ok(Self { size, spread_rate })
+        Ok(NewHeightmap { size, spread_rate })
     }
 }
 
@@ -46,12 +46,12 @@ pub async fn serve_heightmap(form: web::Form<FormData>) -> HttpResponse {
         Ok(spread_rate) => spread_rate,
         Err(_) => return HttpResponse::BadRequest().finish(),
     };
-    let _new_heightmap = NewHeightmap { size, spread_rate };
+    let _new_heightmap = NewHeightmap::create_new_heightmap(size, spread_rate);
     todo!()
-    //    match Heightmap::generate_heightmap(&mut new_heightmap).await {
-    //        Ok(_) => HttpResponse::Ok().finish(),
-    //        Err(_) => HttpResponse::InternalServerError().finish(),
-    //    }
+    // match Heightmap::generate_heightmap(&mut _new_heightmap).await {
+    //         Ok(_) => HttpResponse::Ok().finish(),
+    //         Err(_) => HttpResponse::InternalServerError().finish(),
+    //     }
 }
 
 #[derive(Debug)]
