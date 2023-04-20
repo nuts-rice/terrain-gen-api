@@ -58,7 +58,28 @@ impl AsRef<f64> for HeightmapSpreadRate {
 }
 
 impl NewHeightmap {
-    pub fn create_new_heightmap(size: HeightmapSize, spread_rate: HeightmapSpreadRate) -> NewHeightmap {
-        NewHeightmap {size, spread_rate}
+    pub fn create_new_heightmap(
+        size: HeightmapSize,
+        spread_rate: HeightmapSpreadRate,
+    ) -> NewHeightmap {
+        NewHeightmap { size, spread_rate }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use claims::{assert_err, assert_ok};
+
+    #[test]
+    fn size_greater_than_256_test() {
+        let size = "6".repeat(256);
+        assert_ok!(HeightmapSize::parse(&size));
+    }
+
+    #[test]
+    fn size_greater_than_257_test() {
+        let size = "6".repeat(257);
+        assert_ok!(HeightmapSize::parse(&size));
     }
 }

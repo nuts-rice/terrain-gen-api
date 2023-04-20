@@ -44,19 +44,19 @@ mod tests {
         TestApp { address }
     }
 
-    async fn send_heightmap_creation_request(
-        app_address: &str,
-        build_heightmap_params: &str,
-        client: &reqwest::Client,
-    ) -> reqwest::Response {
-        client
-            .post(&format!("{}/height_map", app_address))
-            .header("Content-Type", "application/x-www-form-urlencoded")
-            .form(&build_heightmap_params)
-            .send()
-            .await
-            .expect("Failed to execute request")
-    }
+    //     async fn send_heightmap_creation_request(
+    //         app_address: &str,
+    //         build_heightmap_params: &str,
+    //         client: &reqwest::Client,
+    //     ) -> reqwest::Response {
+    //         client
+    //             .post(&format!("{}/height_map", app_address))
+    //             .header("Content-Type", "application/x-www-form-urlencoded")
+    //             .body(build_heightmap_params)
+    //             .send()
+    //             .await
+    //             .expect("Failed to execute request")
+    //     }
 
     #[tokio::test]
     async fn health_check_test() {
@@ -82,8 +82,13 @@ mod tests {
         let client = reqwest::Client::new();
         //figure out params we need to build heightmap with midpnt displacement
         let build_heightmap_params = "size=99&spread_rate=0.3";
-        let response =
-            send_heightmap_creation_request(&app.address, &build_heightmap_params, &client).await;
+        let response = client
+            .post(&format!("{}/height_map", app.address))
+            .header("Content-Type", "application/x-www-form-urlencoded")
+            .body(build_heightmap_params)
+            .send()
+            .await
+            .expect("Failed to execute request");
         assert_eq!(200, response.status().as_u16());
     }
 
@@ -96,7 +101,14 @@ mod tests {
             ("size=99&spread_rate=,", "empty spread rate"),
         ];
         for (element, description) in should_panic {
-            let response = send_heightmap_creation_request(&app.address, &element, &client).await;
+            let response = client
+                .post(&format!("{}/height_map", app.address))
+                .header("Content-Type", "application/x-www-form-urlencoded")
+                .body(element)
+                .send()
+                .await
+                .expect("Failed to execute request");
+
             assert_eq!(
                 400,
                 response.status().as_u16(),
