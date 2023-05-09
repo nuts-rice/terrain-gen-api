@@ -1,59 +1,76 @@
-use unicode_segmentation::UnicodeSegmentation;
+use validator::{Validate, ValidationError};
 
 pub struct NewHeightmap {
     pub size: HeightmapSize,
     pub spread_rate: HeightmapSpreadRate,
 }
 
-#[derive(Debug)]
-pub struct HeightmapSize(usize);
+#[derive(Debug, Validate)]
+pub struct HeightmapSize {
+    #[validate(range(min = 3, max = 257))]
+    size: u32,
+}
+
 impl HeightmapSize {
-    pub fn parse(u: &str) -> Result<HeightmapSize, String> {
-        let is_empty_or_whitespace = u.trim().is_empty();
-        let is_too_long = u.graphemes(true).count() > 256;
-        let forbidden_characters = ['/', '(', ')', '"', '<', '>', '\\', '{', '}'];
-        let contains_forbidden_characters = u.chars().any(|g| forbidden_characters.contains(&g));
-        let value = match u.parse::<usize>() {
-            Ok(value) => value,
-            Err(_) => todo!(),
-        };
-        if is_empty_or_whitespace || is_too_long || contains_forbidden_characters {
-            Err(format!("{} is not a valid heightmap size.", u))
-        } else {
-            Ok(Self(value))
-        }
+    pub fn parse(_u: &u32) -> Result<HeightmapSize, ValidationError> {
+        todo!()
+    }
+    // match  u{
+    // Ok(_) => Ok(u)
+    // Err(e) => return e;
+    // };
+
+    //     // let is_empty_or_whitespace = u.trim().is_empty();
+    //     // let is_too_long = u.graphemes(true).count() > 256;
+    //     // let forbidden_characters = ['/', '(', ')', '"', '<', '>', '\\', '{', '}'];
+    //     // let contains_forbidden_characters = u.chars().any(|g| forbidden_characters.contains(&g));
+    //     match u.validate() {
+    //         Ok(_) => (),
+    //         Err(e) => return e,
+    //         // Err(_) => Err(format!("error when parsing heightmap size")),
+    //     };
+    //     // if is_empty_or_whitespace || is_too_long || contains_forbidden_characters {
+    //     //     Err(format!("{} is not a valid heightmap size.", u))
+    //     // } else {
+    //     //     Ok(Self(u))
+    //     // }
+    // }
+    // }
+}
+impl AsRef<u32> for HeightmapSize {
+    fn as_ref(&self) -> &u32 {
+        &self.size
     }
 }
 
-impl AsRef<usize> for HeightmapSize {
-    fn as_ref(&self) -> &usize {
-        &self.0
-    }
+#[derive(Debug, Validate)]
+pub struct HeightmapSpreadRate {
+    #[validate(range(min = 0.01, max = 1.0))]
+    rate: f64,
 }
-
-#[derive(Debug)]
-pub struct HeightmapSpreadRate(f64);
 impl HeightmapSpreadRate {
-    pub fn parse(u: &str) -> Result<HeightmapSpreadRate, String> {
-        let is_empty_or_whitespace = u.trim().is_empty();
-        let is_too_long = u.graphemes(true).count() > 256;
-        let forbidden_characters = ['/', '(', ')', '"', '<', '>', '\\', '{', '}'];
-        let contains_forbidden_characters = u.chars().any(|g| forbidden_characters.contains(&g));
-        let value = match u.parse::<f64>() {
-            Ok(value) => value,
-            Err(_) => todo!(),
-        };
-        if is_empty_or_whitespace || is_too_long || contains_forbidden_characters {
-            Err(format!("{} is not a valid heightmap size.", u))
-        } else {
-            Ok(Self(value))
-        }
+    pub fn parse(_u: &f64) -> Result<HeightmapSpreadRate, String> {
+        todo!()
     }
+    //     // let is_empty_or_whitespace = u.trim().is_empty();
+    //     // let is_too_long = u.graphemes(true).count() > 256;
+    //     // let forbidden_characters = ['/', '(', ')', '"', '<', '>', '\\', '{', '}'];
+    //     // let contains_forbidden_characters = u.chars().any(|g| forbidden_characters.contains(&g));
+    //     match u.validate() {
+    //         Ok(_) => (),
+    //         Err(e) => return e,
+    //     };
+    //     // if is_empty_or_whitespace || is_too_long || contains_forbidden_characters {
+    //     //     Err(format!("{} is not a valid heightmap size.", u))
+    //     // } else {
+    //     //     Ok(Self(u))
+    //     // }
+    // }
+    // }
 }
-
 impl AsRef<f64> for HeightmapSpreadRate {
     fn as_ref(&self) -> &f64 {
-        &self.0
+        &self.rate
     }
 }
 
@@ -80,6 +97,6 @@ mod tests {
     #[test]
     fn size_greater_than_257_test() {
         let size = "6".repeat(257);
-        assert_ok!(HeightmapSize::parse(&size));
+        assert_err!(HeightmapSize::parse(&size));
     }
 }

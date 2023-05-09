@@ -12,17 +12,18 @@ use std::convert::TryFrom;
 
 #[derive(serde::Deserialize)]
 pub struct FormData {
-    size: String,
-    spread_rate: String,
+    size: u32,
+    spread_rate: f64,
 }
 
 impl TryFrom<FormData> for NewHeightmap {
     type Error = String;
 
-    fn try_from(value: FormData) -> Result<NewHeightmap, Self::Error> {
-        let size = HeightmapSize::parse(&value.size)?;
-        let spread_rate = HeightmapSpreadRate::parse(&value.spread_rate)?;
-        Ok(NewHeightmap { size, spread_rate })
+    fn try_from(value: FormData) -> Result<Self, Self::Error> {
+        let size = HeightmapSize::parse(&value.size).unwrap();
+
+        let spread_rate = HeightmapSpreadRate::parse(&value.spread_rate).unwrap();
+        Ok(Self { size, spread_rate })
     }
 }
 
@@ -38,15 +39,19 @@ impl TryFrom<FormData> for NewHeightmap {
 
 pub async fn serve_heightmap(form: web::Form<FormData>) -> HttpResponse {
     //TODO: parse this in and inner
-    let size = match HeightmapSize::parse(&form.0.size) {
-        Ok(size) => size,
-        Err(_) => return HttpResponse::BadRequest().finish(),
-    };
-    let spread_rate = match HeightmapSpreadRate::parse(&form.0.spread_rate) {
-        Ok(spread_rate) => spread_rate,
-        Err(_) => return HttpResponse::BadRequest().finish(),
-    };
-    let _new_heightmap = NewHeightmap::create_new_heightmap(size, spread_rate);
+    // let _new_heightmap = match form.try_into()
+    // {
+    //     Ok(form) => form,
+    //     Err(_) => return HttpResponse::BadRequest().finish(),
+    // };
+    // Ok(HeightmapSize) => size,
+    // Err(_) => return HttpResponse::BadRequest().finish(),
+    // };
+    // let spread_rate = match HeightmapSpreadRate::parse(&form.0.spread_rate).expect("spread rate validation failed") {
+    // Ok(_) => spread_rate,
+    // Err(_) => return HttpResponse::BadRequest().finish(),
+
+    // let _new_heightmap = NewHeightmap::create_new_heightmap(size, spread_rate);
     todo!()
     // match Heightmap::generate_heightmap(&mut _new_heightmap).await {
     //         Ok(_) => HttpResponse::Ok().finish(),
