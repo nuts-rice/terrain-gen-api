@@ -39,11 +39,11 @@ impl TryFrom<FormData> for NewHeightmap {
 
 pub async fn serve_heightmap(form: web::Form<FormData>) -> HttpResponse {
     //TODO: parse this in and inner
-    // let _new_heightmap = match form.try_into()
-    // {
-    //     Ok(form) => form,
-    //     Err(_) => return HttpResponse::BadRequest().finish(),
-    // };
+    let _new_heightmap: NewHeightmap = match form.0.try_into()     {
+         Ok(form) => form,
+         Err(_) => return HttpResponse::BadRequest().finish(),
+     };
+    
     // Ok(HeightmapSize) => size,
     // Err(_) => return HttpResponse::BadRequest().finish(),
     // };
@@ -51,12 +51,12 @@ pub async fn serve_heightmap(form: web::Form<FormData>) -> HttpResponse {
     // Ok(_) => spread_rate,
     // Err(_) => return HttpResponse::BadRequest().finish(),
 
-    // let _new_heightmap = NewHeightmap::create_new_heightmap(size, spread_rate);
-    todo!()
-    // match Heightmap::generate_heightmap(&mut _new_heightmap).await {
-    //         Ok(_) => HttpResponse::Ok().finish(),
-    //         Err(_) => HttpResponse::InternalServerError().finish(),
-    //     }
+    
+    // match _new_heightmap(&mut _new_heightmap).await {
+    //          Ok(_) => HttpResponse::Ok().finish(),
+    //          Err(_) => HttpResponse::InternalServerError().finish(),
+    //      }
+    HttpResponse::Ok().finish()      
 }
 
 #[derive(Debug)]
