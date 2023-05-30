@@ -9,6 +9,7 @@ use cgmath::Vector2;
 //use rapier3d::parry::utils::self.inner2;
 
 use crate::domain::{HeightmapSize, HeightmapSpreadRate, NewHeightmap};
+use image::{ImageBuffer, Rgb};
 use std::convert::TryFrom;
 
 #[derive(serde::Deserialize)]
@@ -60,7 +61,7 @@ pub async fn serve_heightmap(form: web::Form<FormData>) -> HttpResponse {
 }
 
 #[derive(Debug)]
-struct Heightmap {
+pub struct Heightmap {
     size: i32,
     spread_rate: f64,
     inner: Vector2<usize>,
@@ -68,7 +69,7 @@ struct Heightmap {
 }
 
 impl Heightmap {
-    fn new(exponent: i32, _spread_rate: f64) -> Heightmap {
+    pub fn new(exponent: i32, _spread_rate: f64) -> Heightmap {
         let _size = 2_i32.pow(exponent.try_into().unwrap()) as usize;
         tracing::info!(
             "creating heightmap of {} by {} with spread rate of {}",
@@ -96,8 +97,8 @@ impl Heightmap {
 
     pub async fn midpnt_displacement(&mut self) -> Result<(), Error> {
         let mut _rng = rand::thread_rng();
-        let resolution = 2_f64.powf(self.size.try_into().unwrap()) - 1.0;
-        let mut step = self.size;
+        let mut resolution = 2_f64.powf(self.size.try_into().unwrap()) - 1.0;
+        let _step = self.size;
         while resolution > 1.0 {
             let curr_step: usize = (resolution / 2.0).round() as usize;
             for i in (curr_step / 2..self.inner.x - 1).step_by(curr_step) {
@@ -132,8 +133,21 @@ impl Heightmap {
                     // }
                 }
             }
-            step /= 2;
+            resolution /= 2.0;
         }
+        Ok(())
+    }
+
+    pub fn render(&self, file_path: &str) -> Result<(), Error> {
+        let mut img = ImageBuffer::new(self.inner.x as u32, self.inner.y as u32);
+        for (x, y, pixel) in img.enumerate_pixels_mut() {
+            let height = self.heights[x as usize][y as usize];
+            tracing::debug!("height: {}", height);
+            let gray_value = ((height / 255.0) * 255.0) as u8;
+
+            *pixel = Rgb([gray_value, gray_value, gray_value]);
+        }
+        img.save(file_path)?;
         Ok(())
     }
 }

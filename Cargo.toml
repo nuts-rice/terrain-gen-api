@@ -18,6 +18,7 @@ chrono = "0.4.24"
 config = "0.13.3"
 env_logger = "0.10.0"
 fmt = "0.1.0"
+image = "0.24.6"
 log = { version = "0.4.17", features = ["std"] }
 ndarray = "0.15.6"
 num = { version = "0.4.0", features = ["num-bigint"] }
@@ -28,6 +29,7 @@ rapier3d = "0.17.1"
 secrecy = "0.8.0"
 serde = { version = "1.0.115", features = ["derive"] }
 serde-aux = "4"
+simple_logger = "4.1.0"
 test-log = { version = "0.2.11", features = ["trace"] }
 thiserror = "1.0.38"
 tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
