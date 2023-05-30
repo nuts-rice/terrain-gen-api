@@ -66,7 +66,7 @@ impl EC {
 
     pub async fn getInputs(self, form: web::Form<FormData>) -> HttpResponse {
         let _coefficents = &form.coeffiecents;
-       /* match &self.a2{
+        /* match &self.a2{
             Some(result) => {
                 _a2 = result.replace
             }
@@ -280,21 +280,21 @@ pub mod eea {
         *old_a = temp;
     }
 
-/*    
-    pub async fn inverse(a: bigint) {
-        const M: bigint = bigint::from(1u32);
-        let (mut b, mut x, mut y) = (M.clone(), ONE.clone(), ZERO.clone());
-        while (a != ONE.clone()) {
-            const quoatiant: bigint = b/a;
-            y -= quoatiant * x;
-            b %= a;
-            std::mem::swap(&a, &b);
-            std::mem::swap(&x, &y);
-        }
-        return (x % M + M) % M;
+    /*
+        pub async fn inverse(a: bigint) {
+            const M: bigint = bigint::from(1u32);
+            let (mut b, mut x, mut y) = (M.clone(), ONE.clone(), ZERO.clone());
+            while (a != ONE.clone()) {
+                const quoatiant: bigint = b/a;
+                y -= quoatiant * x;
+                b %= a;
+                std::mem::swap(&a, &b);
+                std::mem::swap(&x, &y);
+            }
+            return (x % M + M) % M;
 
-    }
-*/    
+        }
+    */
 
     pub async fn eea(a: bigint, b: bigint) -> (bigint, bigint, bigint) {
         let (mut old_r, mut rem) = if a > b { (b, a) } else { (a, b) };
@@ -324,8 +324,6 @@ pub mod eea {
         }
     }
 }
-    
-
 
 //small embedded tests for eea utils
 /*
@@ -333,9 +331,9 @@ pub mod eea {
 mod tests {
     use super::*;
     use crate::routes::eea::mod_inv_eea;
-        //eea::mod_inv_eea, 
+        //eea::mod_inv_eea,
 
-    
+
     #[actix_rt::test]
     async fn mod_inv_test() {
         let right_a = bigint::from(397u32);
@@ -343,8 +341,8 @@ mod tests {
         let left = bigint::from(1603u32);
         assert_eq!(left, mod_inv_eea(right_a, right_b).await);
     }
-    
-    
+
+
 
     #[actix_rt::test]
     async fn eea_test() {
@@ -355,4 +353,3 @@ mod tests {
     }
 }
 */
-

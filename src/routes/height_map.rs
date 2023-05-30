@@ -1,9 +1,10 @@
 use actix_web::{web, HttpResponse};
 
 use anyhow::Error;
-use ndarray::Array;
-use ndarray::{Array2, Axis};
+
 use rand::Rng;
+
+use cgmath::Vector2;
 //use rapier3d::na::{Vector3, SquareMatrix};
 //use rapier3d::parry::utils::self.inner2;
 
@@ -39,11 +40,11 @@ impl TryFrom<FormData> for NewHeightmap {
 
 pub async fn serve_heightmap(form: web::Form<FormData>) -> HttpResponse {
     //TODO: parse this in and inner
-    let _new_heightmap: NewHeightmap = match form.0.try_into()     {
-         Ok(form) => form,
-         Err(_) => return HttpResponse::BadRequest().finish(),
-     };
-    
+    let _new_heightmap: NewHeightmap = match form.0.try_into() {
+        Ok(form) => form,
+        Err(_) => return HttpResponse::BadRequest().finish(),
+    };
+
     // Ok(HeightmapSize) => size,
     // Err(_) => return HttpResponse::BadRequest().finish(),
     // };
@@ -51,28 +52,36 @@ pub async fn serve_heightmap(form: web::Form<FormData>) -> HttpResponse {
     // Ok(_) => spread_rate,
     // Err(_) => return HttpResponse::BadRequest().finish(),
 
-    
     // match _new_heightmap(&mut _new_heightmap).await {
     //          Ok(_) => HttpResponse::Ok().finish(),
     //          Err(_) => HttpResponse::InternalServerError().finish(),
     //      }
-    HttpResponse::Ok().finish()      
+    HttpResponse::Ok().finish()
 }
 
 #[derive(Debug)]
 struct Heightmap {
-    size: usize,
+    size: i32,
     spread_rate: f64,
-    inner: Array2<f64>,
+    inner: Vector2<usize>,
+    heights: Vec<Vec<f64>>,
 }
 
 impl Heightmap {
-    fn new(size: usize, _spread_rate: f64) -> Self {
-        Self {
-            //TODO: figure parsing size and inner
-            size: 9,
-            spread_rate: 0.0,
-            inner: Array::from_elem((size + 1, size + 1), 0.0),
+    fn new(exponent: i32, _spread_rate: f64) -> Heightmap {
+        let _size = 2_i32.pow(exponent.try_into().unwrap()) as usize;
+        tracing::info!(
+            "creating heightmap of {} by {} with spread rate of {}",
+            exponent,
+            exponent,
+            _spread_rate
+        );
+        let _heights = vec![vec![0.0; _size]; _size];
+        Heightmap {
+            size: exponent,
+            spread_rate: _spread_rate,
+            inner: Vector2 { x: _size, y: _size },
+            heights: _heights,
         }
     }
 
@@ -87,40 +96,40 @@ impl Heightmap {
 
     pub async fn midpnt_displacement(&mut self) -> Result<(), Error> {
         let mut _rng = rand::thread_rng();
+        let resolution = 2_f64.powf(self.size.try_into().unwrap()) - 1.0;
         let mut step = self.size;
-        while step > 1 {
-            for i in (step / 2..self.inner.len_of(Axis(0)) - 1).step_by(step) {
-                for j in (step / 2..self.inner.len_of(Axis(1)) - 1).step_by(step) {
-                    let _square_average = (self.inner[[i - step / 2, j - step / 2]]
-                        + self.inner[[i - step / 2, j + step / 2]]
-                        + self.inner[[i + step / 2, j - step / 2]]
-                        + self.inner[[i + step / 2, j + step / 2]])
-                        / 4.0;
+        while resolution > 1.0 {
+            let curr_step: usize = (resolution / 2.0).round() as usize;
+            for i in (curr_step / 2..self.inner.x - 1).step_by(curr_step) {
+                for j in (curr_step / 2..self.inner.y - 1).step_by(curr_step) {
+                    let _square_average = (self.heights[i][j] + resolution / 2.0) / 4.0;
+                    tracing::debug!("square avg: {}", _square_average);
                     let displacement =
-                        (_rng.gen_range(0.0..1.0) - 0.5) * step as f64 * self.spread_rate;
-                    self.inner[[i, j]] = _square_average + displacement;
+                        (_rng.gen_range(0.0..1.0) - 0.5) * resolution * self.spread_rate;
+                    tracing::debug!("displacement : {}", displacement);
+                    self.heights[i][j] = _square_average + displacement;
 
-                    if j > step / 2 {
-                        let diamond_average = (self.inner[[i - step / 2, j]]
-                            + self.inner[[i + step / 2, j]]
-                            + self.inner[[i, j - step / 2]]
-                            + self.inner[[i, j + step / 2]])
-                            / 4.0;
-                        let displacement =
-                            (_rng.gen_range(0.0..1.0) - 0.5) * step as f64 * self.spread_rate;
-                        self.inner[[i, j - step / 2]] = diamond_average + displacement;
-                    }
+                    // if j > step / 2 {
+                    //     let diamond_average = (self.inner[[i - step / 2, j]]
+                    //         + self.inner[[i + step / 2, j]]
+                    //         + self.inner[[i, j - step / 2]]
+                    //         + self.inner[[i, j + step / 2]])
+                    //         / 4.0;
+                    //     let displacement =
+                    //         (_rng.gen_range(0.0..1.0) - 0.5) * step as f64 * self.spread_rate;
+                    //     self.inner[[i, j - step / 2]] = diamond_average + displacement;
+                    // }
 
-                    if i > step / 2 {
-                        let diamond_average = (self.inner[[i - step / 2, j]]
-                            + self.inner[[i + step / 2, j]]
-                            + self.inner[[i, j - step / 2]]
-                            + self.inner[[i, j + step / 2]])
-                            / 4.0;
-                        let displacement =
-                            (_rng.gen_range(0.0..1.0) - 0.5) * step as f64 * self.spread_rate;
-                        self.inner[[i - step / 2, j]] = diamond_average + displacement;
-                    }
+                    // if i > step / 2 {
+                    //     let diamond_average = (self.inner[[i - step / 2, j]]
+                    //         + self.inner[[i + step / 2, j]]
+                    //         + self.inner[[i, j - step / 2]]
+                    //         + self.inner[[i, j + step / 2]])
+                    //         / 4.0;
+                    //     let displacement =
+                    //         (_rng.gen_range(1.0..1.0) - 0.5) * step as f64 * self.spread_rate;
+                    //     self.inner[[i - step / 2, j]] = diamond_average + displacement;
+                    // }
                 }
             }
             step /= 2;
