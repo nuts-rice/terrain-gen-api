@@ -6,6 +6,6 @@ async fn main() -> std::io::Result<()> {
     let mut heightmap = Heightmap::new(5, 0.2);
     heightmap.midpnt_displacement().await;
     //TODO: figure whjats the deal with height here
-    // heightmap.render("heightmap.png");
+    heightmap.render("heightmap.png");
     Ok(())
 }

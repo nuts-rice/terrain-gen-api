@@ -104,12 +104,10 @@ impl Heightmap {
             for i in (curr_step / 2..self.inner.x - 1).step_by(curr_step) {
                 for j in (curr_step / 2..self.inner.y - 1).step_by(curr_step) {
                     let _square_average = (self.heights[i][j] + resolution / 2.0) / 4.0;
-                    tracing::debug!("square avg: {}", _square_average);
                     let displacement =
                         (_rng.gen_range(0.0..1.0) - 0.5) * resolution * self.spread_rate;
-                    tracing::debug!("displacement : {}", displacement);
                     self.heights[i][j] = _square_average + displacement;
-
+                    tracing::debug!("Height : {}", self.heights[i][j]);
                     // if j > step / 2 {
                     //     let diamond_average = (self.inner[[i - step / 2, j]]
                     //         + self.inner[[i + step / 2, j]]
@@ -142,8 +140,8 @@ impl Heightmap {
         let mut img = ImageBuffer::new(self.inner.x as u32, self.inner.y as u32);
         for (x, y, pixel) in img.enumerate_pixels_mut() {
             let height = self.heights[x as usize][y as usize];
-            tracing::debug!("height: {}", height);
-            let gray_value = ((height / 255.0) * 255.0) as u8;
+            let gray_value = (height * 255.0) as u8;
+            tracing::debug!("gray val: {}", gray_value);
 
             *pixel = Rgb([gray_value, gray_value, gray_value]);
         }
