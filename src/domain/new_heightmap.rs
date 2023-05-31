@@ -8,11 +8,11 @@ pub struct NewHeightmap {
 #[derive(Debug, Validate)]
 pub struct HeightmapSize {
     #[validate(range(min = 3, max = 257))]
-    size: u32,
+    size: i32,
 }
 
 impl HeightmapSize {
-    pub fn parse(_u: &u32) -> Result<HeightmapSize, ValidationError> {
+    pub fn parse(_u: &i32) -> Result<HeightmapSize, ValidationError> {
         todo!()
     }
     // match  u{
@@ -37,8 +37,8 @@ impl HeightmapSize {
     // }
     // }
 }
-impl AsRef<u32> for HeightmapSize {
-    fn as_ref(&self) -> &u32 {
+impl AsRef<i32> for HeightmapSize {
+    fn as_ref(&self) -> &i32 {
         &self.size
     }
 }

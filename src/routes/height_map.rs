@@ -14,7 +14,7 @@ use std::convert::TryFrom;
 
 #[derive(serde::Deserialize)]
 pub struct FormData {
-    size: u32,
+    size: i32,
     spread_rate: f64,
 }
 
