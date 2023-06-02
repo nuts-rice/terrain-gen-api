@@ -60,6 +60,50 @@ pub async fn serve_heightmap(form: web::Form<FormData>) -> HttpResponse {
     HttpResponse::Ok().finish()
 }
 
+// #[derive(Debug)]
+// pub struct ColorGradient {
+//     color_vals: Vec<[u8; 3]>,
+// }
+// impl ColorGradient {
+//     pub const WHITE: Self = Self {
+//         color_vals: vec![
+//             [255, 255, 255],
+//         ],
+//     };
+
+//     pub const BLACK: Self = Self {
+//         color_vals: vec![
+//             [0, 0, 0],
+//         ],
+//     };
+
+//     pub const RED: Self = Self {
+//         color_vals: vec![
+//             [255, 0, 0],
+//         ],
+//     };
+
+//     pub const GREEN: Self = Self {
+//         color_vals: vec![
+//             [0, 255, 0],
+//         ],
+//     };
+
+//     pub const BLUE: Self = Self {
+//         color_vals: vec![
+//             [0, 0, 255],
+//         ],
+//     };
+
+//     // Removed TRANSPARENT as transparency is not handled in RGB model.
+
+//     pub const ORANGE: Self = Self {
+//         color_vals: vec![
+//             [255, 69, 0],
+//         ],
+//     };
+//}
+
 #[derive(Debug)]
 pub struct Heightmap {
     size: i32,
@@ -137,13 +181,19 @@ impl Heightmap {
     }
 
     pub fn render(&self, file_path: &str) -> Result<(), Error> {
+        let mut _rng = rand::thread_rng();
         let mut img = ImageBuffer::new(self.inner.x as u32, self.inner.y as u32);
+        let mut color_grad = [0, 0, 0];
+
         for (x, y, pixel) in img.enumerate_pixels_mut() {
             let height = self.heights[x as usize][y as usize];
             let gray_value = (height * 255.0) as u8;
+            let color_grad_index = _rng.gen_range(0..3);
+            color_grad[color_grad_index] = gray_value;
             tracing::debug!("gray val: {}", gray_value);
-
-            *pixel = Rgb([gray_value, gray_value, gray_value]);
+            *pixel = Rgb(color_grad);
+            let data = pixel.0;
+            tracing::debug!("color vals: {:?}", data);
         }
         img.save(file_path)?;
         Ok(())
