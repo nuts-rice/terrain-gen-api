@@ -1,11 +1,10 @@
+#![feature(lazy_cell)]
+use std::sync::LazyLock;
+use num::BigUint as bigint; 
 use wasm_bindgen::prelude::*;
 use web_sys::console;
 
 
-// When the `wee_alloc` feature is enabled, this uses `wee_alloc` as the global
-// allocator.
-//
-// If you don't want to use `wee_alloc`, you can safely delete this.
 #[cfg(feature = "wee_alloc")]
 #[global_allocator]
 static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
@@ -25,3 +24,19 @@ pub fn main_js() -> Result<(), JsValue> {
 
     Ok(())
 }
+
+pub mod configuration;
+pub mod domain;
+pub mod routes;
+pub mod startup;
+pub mod telemetry;
+// mod utils;
+
+
+pub (crate) static ZERO: LazyLock<bigint> = LazyLock::new(|| bigint::from(0u32));
+pub (crate) static ONE: LazyLock<bigint> = LazyLock::new(|| bigint::from(1u32));
+pub (crate) static TWO: LazyLock<bigint> = LazyLock::new(|| bigint::from(2u32));
+pub (crate) static THREE: LazyLock<bigint> = LazyLock::new(|| bigint::from(3u32));
+
+
+

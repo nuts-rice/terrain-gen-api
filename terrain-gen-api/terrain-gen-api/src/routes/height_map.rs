@@ -10,7 +10,7 @@ use cgmath::Vector2;
 
 use crate::domain::{HeightmapSize, HeightmapSpreadRate, NewHeightmap};
 use image::{ImageBuffer, Rgb};
-use std::convert::{TryInto,TryFrom};
+use std::convert::TryFrom;
 
 #[derive(serde::Deserialize)]
 pub struct FormData {

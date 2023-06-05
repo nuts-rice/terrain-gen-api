@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+<meta charSet="UTF-8"/>
+<meta name="viewport"
+content="width=device-width, initial-
+scale=1.0"/>
+<meta httpEquiv="X-UA-Compatible"
+content="ie=edge"/>
+<meta name="description"
+      content="This is a heightmap generation app"/>
+<title> Heightmap with midpoint displacement </title> 
+</head>
+<body>
+  <h1> Heightmaps </h1>
+  <input type = "text" id="size" placeholder="size of heightmap to create">
+  <button id="create-button" value="Send">Create</button>
+  <canvas id ="heightmapCanvas" width="800" height="800"></canvas>
+  <script type="module" src="index.js"></script>
+  </body>
+  <script>
+    let createButton = document.getElementById("create-button");
+    createButton.addEventListener("click", postAlert);
+    function postAlert() {
+      let titleInput = document.getElementById("size");
+      alert(titleInput.value);
+      titleInput.value = null;
+    }
+  </script>
+</html>
