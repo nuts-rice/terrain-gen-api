@@ -5,6 +5,8 @@ use anyhow::Error;
 use rand::Rng;
 
 use cgmath::Vector2;
+use rapier3d::prelude::*;
+use rapier_testbed3d::Testbed;
 //use rapier3d::na::{Vector3, SquareMatrix};
 //use rapier3d::parry::utils::self.inner2;
 
@@ -197,5 +199,11 @@ impl Heightmap {
         }
         img.save(file_path)?;
         Ok(())
+    }
+
+    pub fn render_scene(&self, testbed: &mut Testbed) -> Result<(), Error> {
+        let mut bodies = RigidBodySet::new();
+        let mut colliders = ColliderSet::new();
+        todo!()
     }
 }
