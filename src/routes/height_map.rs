@@ -4,15 +4,10 @@ use anyhow::Error;
 
 use rand::Rng;
 
-use cgmath::Vector2;
-use rapier3d::prelude::*;
-use rapier_testbed3d::Testbed;
-//use rapier3d::na::{Vector3, SquareMatrix};
-//use rapier3d::parry::utils::self.inner2;
-
 use crate::domain::{HeightmapSize, HeightmapSpreadRate, NewHeightmap};
+use cgmath::Vector2;
 use image::{ImageBuffer, Rgb};
-use std::convert::{TryInto,TryFrom};
+use std::convert::{TryFrom, TryInto};
 
 #[derive(serde::Deserialize)]
 pub struct FormData {
@@ -201,9 +196,9 @@ impl Heightmap {
         Ok(())
     }
 
-    pub fn render_scene(&self, testbed: &mut Testbed) -> Result<(), Error> {
-        let mut bodies = RigidBodySet::new();
-        let mut colliders = ColliderSet::new();
-        todo!()
-    }
+    // pub fn render_scene(&self, testbed: &mut Testbed) -> Result<(), Error> {
+    //     let mut bodies = RigidBodySet::new();
+    //     let mut colliders = ColliderSet::new();
+    //     todo!()
+    // }
 }

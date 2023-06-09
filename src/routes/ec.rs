@@ -11,7 +11,7 @@ use std::{
 
 use yew::prelude::*;
 
-use crate::{ONE, THREE, TWO, ZERO};
+// use crate::{ONE, THREE, TWO, ZERO};
 
 #[derive(Clone, Debug, Default)]
 pub struct EC {
