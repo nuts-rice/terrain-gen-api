@@ -1,4 +1,4 @@
-use actix_web::{web, HttpResponse};
+use actix_web::{post, web, HttpResponse, Result};
 
 use anyhow::Error;
 
@@ -107,13 +107,13 @@ pub async fn serve_heightmap(form: web::Form<FormData>) -> HttpResponse {
 #[derive(Debug)]
 pub struct Heightmap {
     size: i32,
-    spread_rate: f64,
+    spread_rate: f32,
     inner: Vector2<usize>,
-    heights: Vec<Vec<f64>>,
+    heights: Vec<Vec<f32>>,
 }
 
 impl Heightmap {
-    pub fn new(exponent: i32, _spread_rate: f64) -> Heightmap {
+    pub fn new(exponent: i32, _spread_rate: f32) -> Heightmap {
         let _size = 2_i32.pow(exponent.try_into().unwrap()) as usize;
         tracing::info!(
             "creating heightmap of {} by {} with spread rate of {}",
@@ -141,7 +141,7 @@ impl Heightmap {
 
     pub async fn midpnt_displacement(&mut self) -> Result<(), Error> {
         let mut _rng = rand::thread_rng();
-        let mut resolution = 2_f64.powf(self.size.try_into().unwrap()) - 1.0;
+        let mut resolution = 2_f32.powf(self.size as f32) - 1.0;
         let _step = self.size;
         while resolution > 1.0 {
             let curr_step: usize = (resolution / 2.0).round() as usize;
@@ -180,7 +180,7 @@ impl Heightmap {
         Ok(())
     }
 
-    pub fn render(&self, file_path: &str) -> Result<(), Error> {
+    pub async fn render(&self, file_path: &str) -> Result<(), Error> {
         let mut _rng = rand::thread_rng();
         let mut img = ImageBuffer::new(self.inner.x as u32, self.inner.y as u32);
         let mut color_grad = [0, 0, 0];
@@ -198,4 +198,21 @@ impl Heightmap {
         img.save(file_path)?;
         Ok(())
     }
+}
+#[post("/new_heightmap/{exponent}/{spread_rate}")]
+async fn new_heightmap(path: web::Path<(i32, f32)>) -> Result<String> {
+    let (exponent, spread_rate) = path.into_inner();
+    tracing::info!(
+        "creating heightmap of {} by {} with spread rate of {}",
+        exponent,
+        exponent,
+        spread_rate
+    );
+    Heightmap::new(exponent, spread_rate)
+        .midpnt_displacement()
+        .await;
+    Ok(format!(
+        "ok, new heightmap: {} by {} with spread rate of {} ",
+        exponent, exponent, spread_rate
+    ))
 }
