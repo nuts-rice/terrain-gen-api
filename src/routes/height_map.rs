@@ -1,6 +1,6 @@
-use actix_web::{post, web, HttpResponse, Result};
+use actix_web::{http::header::ContentType, post, web, HttpResponse, Result};
 
-use anyhow::Error;
+use anyhow::{Error, Ok};
 
 use rand::Rng;
 
@@ -8,9 +8,7 @@ use cgmath::Vector2;
 //use rapier3d::na::{Vector3, SquareMatrix};
 //use rapier3d::parry::utils::self.inner2;
 
-use crate::domain::{HeightmapSize, HeightmapSpreadRate, NewHeightmap};
 use image::{ImageBuffer, Rgb};
-use std::convert::TryFrom;
 
 #[derive(serde::Deserialize)]
 pub struct FormData {
@@ -18,47 +16,47 @@ pub struct FormData {
     spread_rate: f64,
 }
 
-impl TryFrom<FormData> for NewHeightmap {
-    type Error = String;
+// impl TryFrom<FormData> for NewHeightmap {
+//     type Error = String;
 
-    fn try_from(value: FormData) -> Result<Self, Self::Error> {
-        let size = HeightmapSize::parse(&value.size).unwrap();
+//     fn try_from(value: FormData) -> Result<NewHeightmap, String> {
+//         let size = HeightmapSize::parse(&value.size).unwrap();
 
-        let spread_rate = HeightmapSpreadRate::parse(&value.spread_rate).unwrap();
-        Ok(Self { size, spread_rate })
-    }
-}
+//         let spread_rate = HeightmapSpreadRate::parse(&value.spread_rate).unwrap();
+//         Ok(Self { size, spread_rate })
+//     }
+// }
 
-#[allow(clippy::async_yields_async)]
-#[tracing::instrument(
-    name = "generating a new heightmap",
-    skip(form),
-    fields(
-            heightmap_size = %form.size,
-            heightmap_spread_rate = %form.spread_rate,
-        )
-)]
+// #[allow(clippy::async_yields_async)]
+// #[tracing::instrument(
+//     name = "generating a new heightmap",
+//     skip(form),
+//     fields(
+//             heightmap_size = %form.size,
+//             heightmap_spread_rate = %form.spread_rate,
+//         )
+// )]
 
-pub async fn serve_heightmap(form: web::Form<FormData>) -> HttpResponse {
-    //TODO: parse this in and inner
-    let _new_heightmap: NewHeightmap = match form.0.try_into() {
-        Ok(form) => form,
-        Err(_) => return HttpResponse::BadRequest().finish(),
-    };
+//pub async fn serve_heightmap(form: web::Form<FormData>) -> HttpResponse {
+//    //TODO: parse this in and inner
+//    let _new_heightmap: NewHeightmap = match form.0.try_into() {
+//        Ok(form) => form,
+//        Err(_) => return HttpResponse::BadRequest().finish(),
+//    };
 
-    // Ok(HeightmapSize) => size,
-    // Err(_) => return HttpResponse::BadRequest().finish(),
-    // };
-    // let spread_rate = match HeightmapSpreadRate::parse(&form.0.spread_rate).expect("spread rate validation failed") {
-    // Ok(_) => spread_rate,
-    // Err(_) => return HttpResponse::BadRequest().finish(),
+// Ok(HeightmapSize) => size,
+// Err(_) => return HttpResponse::BadRequest().finish(),
+// };
+// let spread_rate = match HeightmapSpreadRate::parse(&form.0.spread_rate).expect("spread rate validation failed") {
+// Ok(_) => spread_rate,
+// Err(_) => return HttpResponse::BadRequest().finish(),
 
-    // match _new_heightmap(&mut _new_heightmap).await {
-    //          Ok(_) => HttpResponse::Ok().finish(),
-    //          Err(_) => HttpResponse::InternalServerError().finish(),
-    //      }
-    HttpResponse::Ok().finish()
-}
+// match _new_heightmap(&mut _new_heightmap).await {
+//          Ok(_) => HttpResponse::Ok().finish(),
+//          Err(_) => HttpResponse::InternalServerError().finish(),
+//      }
+// HttpResponse::Ok().finish()
+// }
 
 // #[derive(Debug)]
 // pub struct ColorGradient {
@@ -113,7 +111,7 @@ pub struct Heightmap {
 }
 
 impl Heightmap {
-    pub fn new(exponent: i32, _spread_rate: f32) -> Heightmap {
+    pub async fn new(exponent: i32, _spread_rate: f32) -> Result<Heightmap, Error> {
         let _size = 2_i32.pow(exponent.try_into().unwrap()) as usize;
         tracing::info!(
             "creating heightmap of {} by {} with spread rate of {}",
@@ -122,12 +120,12 @@ impl Heightmap {
             _spread_rate
         );
         let _heights = vec![vec![0.0; _size]; _size];
-        Heightmap {
+        Ok(Heightmap {
             size: exponent,
             spread_rate: _spread_rate,
             inner: Vector2 { x: _size, y: _size },
             heights: _heights,
-        }
+        })
     }
 
     #[tracing::instrument(name = "randomizing heightmap")]
@@ -200,7 +198,7 @@ impl Heightmap {
     }
 }
 #[post("/new_heightmap/{exponent}/{spread_rate}")]
-async fn new_heightmap(path: web::Path<(i32, f32)>) -> Result<String> {
+async fn new_heightmap(path: web::Path<(i32, f32)>) -> HttpResponse {
     let (exponent, spread_rate) = path.into_inner();
     tracing::info!(
         "creating heightmap of {} by {} with spread rate of {}",
@@ -208,11 +206,16 @@ async fn new_heightmap(path: web::Path<(i32, f32)>) -> Result<String> {
         exponent,
         spread_rate
     );
-    Heightmap::new(exponent, spread_rate)
-        .midpnt_displacement()
-        .await;
-    Ok(format!(
-        "ok, new heightmap: {} by {} with spread rate of {} ",
-        exponent, exponent, spread_rate
-    ))
+    let mut heightmap = Heightmap::new(exponent, spread_rate).await.unwrap();
+    heightmap.midpnt_displacement().await.map_err(|e| {
+        actix_web::error::ErrorImATeapot(e);
+    });
+    let img = heightmap.render("heightmap.png").await.unwrap();
+    // map_err(|e| {
+    // tracing::error!("failed to midpoint displacement:  {:?}", e);
+    // e        })?;
+
+    HttpResponse::Ok()
+        .content_type(ContentType::png())
+        .body(img)
 }
