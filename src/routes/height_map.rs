@@ -1,6 +1,4 @@
-use actix_web::{http::header::ContentType, post, web, HttpResponse, Result};
-
-use anyhow::{Error, Ok};
+use actix_web::{http::header::ContentType, post, web, Error, HttpResponse, Result};
 
 use rand::Rng;
 
@@ -193,12 +191,12 @@ impl Heightmap {
             let data = pixel.0;
             tracing::debug!("color vals: {:?}", data);
         }
-        img.save(file_path)?;
+        img.save(file_path);
         Ok(())
     }
 }
 #[post("/new_heightmap/{exponent}/{spread_rate}")]
-async fn new_heightmap(path: web::Path<(i32, f32)>) -> HttpResponse {
+pub async fn new_heightmap(path: web::Path<(i32, f32)>) -> Result<HttpResponse, Error> {
     let (exponent, spread_rate) = path.into_inner();
     tracing::info!(
         "creating heightmap of {} by {} with spread rate of {}",
@@ -215,7 +213,7 @@ async fn new_heightmap(path: web::Path<(i32, f32)>) -> HttpResponse {
     // tracing::error!("failed to midpoint displacement:  {:?}", e);
     // e        })?;
 
-    HttpResponse::Ok()
+    Ok(HttpResponse::Ok()
         .content_type(ContentType::png())
-        .body(img)
+        .body(img))
 }

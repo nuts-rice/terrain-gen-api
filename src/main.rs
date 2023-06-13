@@ -1,15 +1,18 @@
 use actix_files::Files;
 use actix_web::{App, HttpServer};
-use tracing::info;
-
+use terrain_gen_api::configuration::get_config;
 use terrain_gen_api::routes::height_map;
+use tracing::info;
 
 #[tokio::main]
 async fn main() -> std::io::Result<()> {
     tracing_subscriber::fmt()
         .with_max_level(tracing::Level::DEBUG)
         .init();
-    info!("spawing server at 127.0.0.1:8080");
+    let config = get_config().expect("failed to read config");
+    let address = format!("{}:{}", config.application.host, config.application.port);
+
+    info!("spawing server at {}", address);
     HttpServer::new(|| {
         App::new()
             .service(height_map::new_heightmap)
