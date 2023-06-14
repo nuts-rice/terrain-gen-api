@@ -10,7 +10,7 @@ use image::{ImageBuffer, Rgb};
 
 #[derive(serde::Deserialize)]
 pub struct FormData {
-    size: i32,
+    exponent: i32,
     spread_rate: f64,
 }
 
@@ -191,7 +191,7 @@ impl Heightmap {
             let data = pixel.0;
             tracing::debug!("color vals: {:?}", data);
         }
-        img.save(file_path);
+        img.save(file_path).expect("error in rendering");
         Ok(())
     }
 }
@@ -205,9 +205,13 @@ pub async fn new_heightmap(path: web::Path<(i32, f32)>) -> Result<HttpResponse, 
         spread_rate
     );
     let mut heightmap = Heightmap::new(exponent, spread_rate).await.unwrap();
-    heightmap.midpnt_displacement().await.map_err(|e| {
-        actix_web::error::ErrorImATeapot(e);
-    });
+    heightmap
+        .midpnt_displacement()
+        .await
+        .map_err(|e| {
+            actix_web::error::ErrorImATeapot(e);
+        })
+        .expect("error in midpnt displacement");
     let img = heightmap.render("heightmap.png").await.unwrap();
     // map_err(|e| {
     // tracing::error!("failed to midpoint displacement:  {:?}", e);

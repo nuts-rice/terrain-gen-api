@@ -1,8 +1,14 @@
-use actix_files::Files;
-use actix_web::{App, HttpServer};
+use actix_web::{web, App, HttpResponse, HttpServer, Result};
+use serde::{Deserialize, Serialize};
 use terrain_gen_api::configuration::get_config;
-use terrain_gen_api::routes::height_map;
+
 use tracing::info;
+
+#[derive(Serialize, Deserialize)]
+pub struct FormData {
+    exponent: i32,
+    spreadRate: f32,
+}
 
 #[tokio::main]
 async fn main() -> std::io::Result<()> {
@@ -15,13 +21,25 @@ async fn main() -> std::io::Result<()> {
     info!("spawing server at {}", address);
     HttpServer::new(|| {
         App::new()
-            .service(height_map::new_heightmap)
-            .service(Files::new("images", "static/images").show_files_listing())
-            .service(Files::new("/", "./static/www/").index_file("index.html"))
+            .service(web::resource("/").route(web::get().to(index)))
+            .service(web::resource("/post_input").route(web::post().to(handle_form)))
     })
-    .bind(("127.0.0.1", 8080))?
+    .bind(address)?
     .run()
     .await
+}
+
+async fn index() -> Result<HttpResponse> {
+    Ok(HttpResponse::Ok()
+        .content_type("text/html; charset=utf-8")
+        .body(include_str!("../static/www/index.html")))
+}
+
+async fn handle_form(params: web::Form<FormData>) -> Result<HttpResponse> {
+    Ok(HttpResponse::Ok().content_type("text/plain").body(format!(
+        "heightmap has size of {} by {} and spread rate of {}",
+        params.exponent, params.exponent, params.spreadRate
+    )))
 }
 
 //let subscriber = get_subscriber(1, "info".into(), std::io::stdout);
