@@ -3,6 +3,10 @@ use actix_web::{http::header::ContentType, post, web, Error, HttpResponse, Resul
 use rand::Rng;
 
 use cgmath::Vector2;
+use rapier3d::prelude::*;
+
+//TODO: THIS BREAKS THINGS
+//use bevy_rapier3d::prelude::*;
 //use rapier3d::na::{Vector3, SquareMatrix};
 //use rapier3d::parry::utils::self.inner2;
 
@@ -194,7 +198,18 @@ impl Heightmap {
         img.save(file_path).expect("error in rendering");
         Ok(())
     }
+    pub async fn render_3d(&self) -> Result<(), Error> {
+        let ground_size = Vector::new(100.0, 1.0, 100.0);
+        let flat_land: Vec<f32> = self.heights.iter().flatten().copied().collect();
+        let _heights = DMatrix::from_vec(self.size as usize, self.size as usize, flat_land);
+        let _heightfield = ColliderBuilder::heightfield(_heights, ground_size).build();
+
+        let _debug_render = DebugRenderPipeline::default();
+
+        Ok(())
+    }
 }
+
 #[post("/new_heightmap/{exponent}/{spread_rate}")]
 pub async fn new_heightmap(path: web::Path<(i32, f32)>) -> Result<HttpResponse, Error> {
     let (exponent, spread_rate) = path.into_inner();

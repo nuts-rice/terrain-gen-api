@@ -26,7 +26,7 @@
         </div>
       <img id = "web_heightmap">
     </main>
-          <script> 
+          <script>                     
 document.querySelector('form').addEventListener('render', function(e) {
     e.preventDefault();
     var data = new FormData(e.target);
@@ -35,12 +35,18 @@ document.querySelector('form').addEventListener('render', function(e) {
         body: data
     })
     .then(response => response.json())
-    .then(data => {
-        document.querySelector('#heightmap').src = data.url;
-    })
-});
-</script>
+    .then(heightmap => {
 
+  
+    })
+    .then(data => {
+        document.querySelector('#web_heightmap').src = data.url;
+    })
+    
+    
+    });
+</script>
+<script type="module" src="./www/js/index.js"></script>
 
   </body>
 </html>
