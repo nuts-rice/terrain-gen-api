@@ -1,13 +1,22 @@
+use actix_files::Files;
 use actix_web::{web, App, HttpResponse, HttpServer, Result};
-use serde::{Deserialize, Serialize};
-use terrain_gen_api::configuration::get_config;
 
-use tracing::info;
+use serde::{Deserialize, Serialize};
+use terrain_gen_api::{configuration::get_config, routes::Heightmap};
+
+use tracing::{debug, info};
+
+const MAX_SIZE: usize = 256;
 
 #[derive(Serialize, Deserialize)]
 pub struct FormData {
     exponent: i32,
     spreadRate: f32,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct HeightmapResponse {
+    url: String,
 }
 
 #[tokio::main]
@@ -21,8 +30,15 @@ async fn main() -> std::io::Result<()> {
     info!("spawing server at {}", address);
     HttpServer::new(|| {
         App::new()
+            // web::scope("/")
+            .service(Files::new("/static", "./static").show_files_listing())
             .service(web::resource("/").route(web::get().to(index)))
-            .service(web::resource("/post_input").route(web::post().to(handle_form)))
+            // .service(Files::new("/static", "../static/" ).index_file("index.html"))
+            .service(
+                web::resource("/post_input")
+                    .app_data(web::PayloadConfig::default().limit(MAX_SIZE))
+                    .route(web::post().to(handle_form)),
+            )
     })
     .bind(address)?
     .run()
@@ -32,14 +48,23 @@ async fn main() -> std::io::Result<()> {
 async fn index() -> Result<HttpResponse> {
     Ok(HttpResponse::Ok()
         .content_type("text/html; charset=utf-8")
-        .body(include_str!("../static/www/index.html")))
+        .body(include_str!("../static/index.html")))
 }
 
 async fn handle_form(params: web::Form<FormData>) -> Result<HttpResponse> {
-    Ok(HttpResponse::Ok().content_type("text/plain").body(format!(
+    let mut heightmap = Heightmap::new(params.exponent, params.spreadRate)
+        .await
+        .unwrap();
+    heightmap.midpnt_displacement().await.unwrap();
+    heightmap.render("web_heightmap.png").await.unwrap();
+    debug!(
         "heightmap has size of {} by {} and spread rate of {}",
         params.exponent, params.exponent, params.spreadRate
-    )))
+    );
+    let response = HeightmapResponse {
+        url: "web_heightmap.png".to_string(),
+    };
+    Ok(HttpResponse::Ok().json(response))
 }
 
 //let subscriber = get_subscriber(1, "info".into(), std::io::stdout);
