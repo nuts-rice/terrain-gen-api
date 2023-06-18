@@ -32,7 +32,7 @@ async fn main() -> std::io::Result<()> {
         App::new()
             // web::scope("/")
             .service(Files::new("/static", "./static").show_files_listing())
-            .service(Files::new("/static", "./static/www/js").show_files_listing())
+            .service(Files::new("/static", "./static/www").show_files_listing())
             .service(web::resource("/").route(web::get().to(index)))
             // .service(Files::new("/static", "../static/" ).index_file("index.html"))
             .service(

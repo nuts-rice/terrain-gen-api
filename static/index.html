@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html>
   <head>
     <meta content="text/html;charset=utf-8" http-equiv="Content-Type"/>
@@ -26,27 +27,7 @@
         </div>
       <img id = "web_heightmap">
     </main>
-          <script>                     
-document.querySelector('form').addEventListener('render', function(e) {
-    e.preventDefault();
-    var data = new FormData(e.target);
-    fetch('/post_input', {
-        method: 'POST',
-        body: data
-    })
-    .then(response => response.json())
-    .then(heightmap => {
-
-  
-    })
-    .then(data => {
-        document.querySelector('#web_heightmap').src = data.url;
-    })
-    
-    
-    });
-</script>
-<script type="module" src="./www/js/index.js"></script>
+<script type="module" src="/static/www/js/main.js" </script>
 
   </body>
 </html>
