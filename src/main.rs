@@ -3,7 +3,7 @@ use actix_web::{web, App, HttpResponse, HttpServer, Result};
 
 use serde::{Deserialize, Serialize};
 use terrain_gen_api::{configuration::get_config, routes::Heightmap};
-
+use std::time::Instant;
 use tracing::{debug, info};
 
 const MAX_SIZE: usize = 256;
@@ -56,7 +56,10 @@ async fn handle_form(params: web::Form<FormData>) -> Result<HttpResponse> {
     let mut heightmap = Heightmap::new(params.exponent, params.spreadRate)
         .await
         .unwrap();
+    let _time = Instant::now();
     heightmap.midpnt_displacement().await.unwrap();
+    let elapsed = _time.elapsed();
+    tracing::info!("midpoint displacement took {} milliseconds ", elapsed.as_millis());
     heightmap.render("web_heightmap.png").await.unwrap();
     debug!(
         "heightmap has size of {} by {} and spread rate of {}",

@@ -4,8 +4,6 @@ use rand::Rng;
 
 use cgmath::Vector2;
 use rapier3d::prelude::*;
-use std::sync::Arc;
-
 
 //TODO: THIS BREAKS THINGS
 //use bevy_rapier3d::prelude::*;
@@ -192,10 +190,10 @@ impl Heightmap {
             let gray_value = (height * 255.0) as u8;
             let color_grad_index = _rng.gen_range(0..3);
             color_grad[color_grad_index] = gray_value;
-            tracing::debug!("gray val: {}", gray_value);
+            // tracing::debug!("gray val: {}", gray_value);
             *pixel = Rgb(color_grad);
-            let data = pixel.0;
-            tracing::debug!("color vals: {:?}", data);
+            let _data = pixel.0;
+            // tracing::debug!("color vals: {:?}", data);
         }
         img.save(file_path).expect("error in rendering");
         Ok(())
@@ -223,9 +221,7 @@ impl Heightmap {
 
     //     Ok(())
     // }
-
 }
-
 
 #[post("/new_heightmap/{exponent}/{spread_rate}")]
 pub async fn new_heightmap(path: web::Path<(i32, f32)>) -> Result<HttpResponse, Error> {
