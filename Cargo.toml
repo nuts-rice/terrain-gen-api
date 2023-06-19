@@ -19,8 +19,10 @@ bevy_rapier3d = { version = "0.21.0", features = ["simd-stable"] }
 cgmath = "0.18.0"
 chrono = "0.4.24"
 config = "0.13.3"
+criterion = { version = "0.5.1", features = ["async", "async-std", "async_tokio", "async_futures", "async_std"] }
 env_logger = "0.10.0"
 fmt = "0.1.0"
+futures = "0.3.28"
 image = "0.24.6"
 log = { version = "0.4.17", features = ["std"] }
 ndarray = "0.15.6"
@@ -47,6 +49,10 @@ validator = { version = "0.16.0", features = ["derive"] }
 wasm-bindgen = "0.2.84"
 wasm-pack = "0.11.1"
 yew = "0.20.0"
+
+[[bench]]
+name = "benches"
+harness = false
 
 [dev-dependencies]
 claims = "0.7.0"

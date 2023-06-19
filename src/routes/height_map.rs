@@ -4,6 +4,8 @@ use rand::Rng;
 
 use cgmath::Vector2;
 use rapier3d::prelude::*;
+use std::sync::Arc;
+
 
 //TODO: THIS BREAKS THINGS
 //use bevy_rapier3d::prelude::*;
@@ -198,7 +200,8 @@ impl Heightmap {
         img.save(file_path).expect("error in rendering");
         Ok(())
     }
-    pub async fn render_3d(&self) -> Result<(), Error> {
+
+    pub async fn render_3d_vec(&self) -> Result<(), Error> {
         let ground_size = Vector::new(100.0, 1.0, 100.0);
         let flat_land: Vec<f32> = self.heights.iter().flatten().copied().collect();
         let _heights = DMatrix::from_vec(self.size as usize, self.size as usize, flat_land);
@@ -208,7 +211,21 @@ impl Heightmap {
 
         Ok(())
     }
+
+    //Testing purposes
+    // pub async fn render_3d_arc(&self) -> Result<(), Error> {
+    //     let ground_size = Vector::new(100.0, 1.0, 100.0);
+    //     let flat_land: Arc<f32> = self.heights.iter().flatten().copied();
+    //     let _heights = DMatrix::from_vec(self.size as usize, self.size as usize, flat_land);
+    //     let _heightfield = ColliderBuilder::heightfield(_heights, ground_size).build();
+
+    //     let _debug_render = DebugRenderPipeline::default();
+
+    //     Ok(())
+    // }
+
 }
+
 
 #[post("/new_heightmap/{exponent}/{spread_rate}")]
 pub async fn new_heightmap(path: web::Path<(i32, f32)>) -> Result<HttpResponse, Error> {
