@@ -1,5 +1,5 @@
-import * as THREE from "./node_modules/three";
-
+import * as THREE from "./node_modules/three/build/three.module.js";
+console.log(THREE)
 document.querySelector("form").addEventListener("render", function (e) {
   e.preventDefault();
   var data = new FormData(e.target);
@@ -8,9 +8,9 @@ document.querySelector("form").addEventListener("render", function (e) {
     body: data,
   })
     .then((response) => response.json())
-    .then((heightmap) => {})
-    .then((data) => {
-      document.querySelector("#web_heightmap").src = data.url;
+    .then(data => {
+      // document.querySelector("#web_heightmap").src = data.url;
+      console.log(data);
     });
 });
 
@@ -25,17 +25,16 @@ const camera = new THREE.PerspectiveCamera(
 const renderer = new THREE.WebGLRenderer();
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
-const geometry = new THREE.BoxGeometry(1, 1, 1);
-const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-const cube = new THREE.Mesh(geometry, material);
-scene.add(cube);
-
+const geometry = new THREE.PlaneGeometry(1,1);
+const material = new THREE.MeshBasicMaterial( {color: 0xffff00, side: THREE.DoubleSide} );
+const plane = new THREE.Mesh( geometry, material );
+scene.add( plane );
 camera.position.z = 5;
-
 function animate() {
-  requestAnimationFrame(animate);
-  cube.rotation.x += 0.01;
-  cube.rotation.y += 0.01;
-  renderer.render(scene, camera);
+	requestAnimationFrame( animate );
+  plane.rotation.x += 0.01;
+	plane.rotation.y += 0.01;
+	renderer.render( scene, camera );
 }
 animate();
+

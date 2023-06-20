@@ -1,9 +1,10 @@
+#![feature(slice_pattern)]
 use actix_files::Files;
 use actix_web::{web, App, HttpResponse, HttpServer, Result};
 
 use serde::{Deserialize, Serialize};
-use terrain_gen_api::{configuration::get_config, routes::Heightmap};
 use std::time::Instant;
+use terrain_gen_api::{configuration::get_config, routes::Heightmap};
 use tracing::{debug, info};
 
 const MAX_SIZE: usize = 256;
@@ -59,19 +60,29 @@ async fn handle_form(params: web::Form<FormData>) -> Result<HttpResponse> {
     let _time_midpnt = Instant::now();
     heightmap.midpnt_displacement().await.unwrap();
     let elapsed = _time_midpnt.elapsed();
-    tracing::info!("midpoint displacement took {} milliseconds ", elapsed.as_millis());
+    tracing::info!(
+        "midpoint displacement took {} milliseconds ",
+        elapsed.as_millis()
+    );
     let _time_render = Instant::now();
     heightmap.render("web_heightmap.png").await.unwrap();
     let elapsed_render = _time_render.elapsed();
     tracing::info!("2d render took {} milliseconds", elapsed_render.as_millis());
+    let _time_3d_render = Instant::now();
+    heightmap.render_3d_test().await.unwrap();
+    let elapsed_render_3d = _time_3d_render.elapsed();
+    tracing::info!(
+        "3d render arc test took {} milliseconds",
+        elapsed_render_3d.as_millis()
+    );
+
     debug!(
         "heightmap has size of {} by {} and spread rate of {}",
         params.exponent, params.exponent, params.spreadRate
     );
-    let response = HeightmapResponse {
-        url: "web_heightmap.png".to_string(),
-    };
-    Ok(HttpResponse::Ok().json(response))
+    let response = Heightmap::render_3d_test(&heightmap);
+
+    Ok(HttpResponse::Ok().json(response.await.unwrap()))
 }
 
 //let subscriber = get_subscriber(1, "info".into(), std::io::stdout);

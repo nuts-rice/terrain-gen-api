@@ -1,3 +1,5 @@
+#![feature(slice_pattern)]
+
 // #![feature(lazy_cell)]
 // use std::sync::LazyLock;
 // use num::BigUint as bigint; 
