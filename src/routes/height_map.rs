@@ -5,10 +5,9 @@ use rand::Rng;
 use rapier3d::prelude::*;
 use rayon::prelude::*;
 use serde::{Deserialize, Serialize};
-use tracing::callsite;
-use core::slice::SlicePattern;
-use std::sync::Arc;
+
 use std::fmt;
+use std::sync::Arc;
 //TODO: THIS BREAKS THINGS
 //use bevy_rapier3d::prelude::*;
 //use rapier3d::na::{Vector3, SquareMatrix};
@@ -162,7 +161,7 @@ impl Heightmap {
                             if Self::is_in_range(j, curr_step, self.inner.y) {
                                 let mut _rng = rand::thread_rng();
                                 let _square_average = (*height + resolution / 2.0) / 4.0;
-                                        let displacement = (_rng.gen_range(0.0..1.0) - 0.5)
+                                let displacement = (_rng.gen_range(0.0..1.0) - 0.5)
                                     * resolution
                                     * self.spread_rate;
 
@@ -198,11 +197,9 @@ impl Heightmap {
         Ok(())
     }
 
-
-    fn is_in_range( idx: usize, curr_step: usize, limit: usize)  -> bool {
+    fn is_in_range(idx: usize, curr_step: usize, limit: usize) -> bool {
         idx >= curr_step / 2 && idx < limit - 1 && idx % curr_step == 0
     }
-
 
     pub async fn render(&self, file_path: &str) -> Result<(), Error> {
         let mut _rng = rand::thread_rng();
@@ -223,18 +220,32 @@ impl Heightmap {
         Ok(())
     }
 
+    pub async fn render_2d_test(&self, file_path: &str) -> Result<(), Error> {
+        let mut img = ImageBuffer::new(self.inner.x as u32, self.inner.y as u32);
+        for (x, y, pixel) in img.enumerate_pixels_mut() {
+            let height = self.heights[x as usize][y as usize];
+            let gray_value = (height * 255.0) as u8;
+            *pixel = Rgb([gray_value, gray_value, gray_value]);
+        }
+        img.save(file_path).expect("error in rendering");
+        Ok(())
+    }
+
     //TODO: Ok try to use Arc<[T]> here?
     pub async fn render_3d_test(&self) -> Result<HeightsResponse, Error> {
         //uh needs physics state here
-        let ground_size = Vector::new(100.0, 1.0, 100.0);
-        let flat_land: Vec<f32> = Vec::from(self.heights.iter().flatten().copied().collect::<Vec<_>>());
+        let _ground_size = Vector::new(100.0, 1.0, 100.0);
+        let flat_land: Vec<f32> =
+            Vec::from(self.heights.iter().flatten().copied().collect::<Vec<_>>());
         // tracing::debug!("heights: {:?}", flat_land.iter().map(|h| h.to_string()).collect::<Vec<_>>().join(", "));
         // let _heights = DMatrix::from_vec(self.size as usize, self.size as usize, flat_land.to_vec());
         // let _heightfield = ColliderBuilder::heightfield(_heights, ground_size).build();
 
         // let _debug_render = DebugRenderPipeline::default();
 
-        Ok(HeightsResponse { heights: flat_land.clone() })
+        Ok(HeightsResponse {
+            heights: flat_land.clone(),
+        })
     }
 
     //Testing purposes
@@ -252,8 +263,17 @@ impl Heightmap {
 
 impl fmt::Display for Heightmap {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-                let flat_land: Arc<[f32]> = Arc::from(self.heights.iter().flatten().copied().collect::<Vec<f32>>());
-                write!(f, "heights: {:?}", flat_land.iter().map(|h| h.to_string()).collect::<Vec<_>>().join(", "))
+        let flat_land: Arc<[f32]> =
+            Arc::from(self.heights.iter().flatten().copied().collect::<Vec<f32>>());
+        write!(
+            f,
+            "heights: {:?}",
+            flat_land
+                .iter()
+                .map(|h| h.to_string())
+                .collect::<Vec<_>>()
+                .join(", ")
+        )
     }
 }
 

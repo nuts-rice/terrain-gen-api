@@ -28,12 +28,20 @@ async fn main() -> std::io::Result<()> {
     let config = get_config().expect("failed to read config");
     let address = format!("{}:{}", config.application.host, config.application.port);
 
+    let mut init_heightmap = Heightmap::new(7, 0.2).await.unwrap();
+    init_heightmap.midpnt_displacement().await.unwrap();
+    init_heightmap
+        .render_2d_test("./static/images/heightmap_test.png")
+        .await
+        .unwrap();
+
     info!("spawing server at {}", address);
     HttpServer::new(|| {
         App::new()
             // web::scope("/")
             .service(Files::new("/static", "./static").show_files_listing())
             .service(Files::new("/static", "./static/www").show_files_listing())
+            .service(Files::new("/static", "./static/images").show_files_listing())
             .service(web::resource("/").route(web::get().to(index)))
             // .service(Files::new("/static", "../static/" ).index_file("index.html"))
             .service(
