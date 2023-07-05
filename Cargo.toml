@@ -18,6 +18,7 @@ bevy = "0.10.1"
 bevy_rapier3d = { version = "0.21.0", features = ["simd-stable"] }
 cgmath = "0.18.0"
 chrono = "0.4.24"
+clap = { version = "4.3.10", features = ["derive"] }
 config = "0.13.3"
 criterion = { version = "0.5.1", features = ["async", "async-std", "async_tokio", "async_futures", "async_std"] }
 env_logger = "0.10.0"

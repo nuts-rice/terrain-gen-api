@@ -1,5 +1,5 @@
-import * as THREE from "./node_modules/three/build/three.module.js";
-
+import * as THREE from "three";
+import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 main();
 function main() {
   try {
@@ -13,11 +13,14 @@ function main() {
       0.1,
       1000
     );
-    camera.position.z = 100;
+    var clock = new THREE.Clock();
+    var controls = new OrbitControls(camera, renderer.domElement);
 
+    camera.position.z = 100;
+    controls.update();
     var scene = new THREE.Scene();
     scene.background = new THREE.Color(0x232634);
-    var geometry = new THREE.PlaneGeometry(40, 40, 40, 40);
+    var geometry = new THREE.PlaneGeometry(20, 20, 20, 20);
 
     //testing geometry render
 
@@ -27,6 +30,7 @@ function main() {
     // scene.add(test_icoshahedron);
     var loader = new THREE.TextureLoader();
     loader.load("static/images/heightmap_test.png", (texture) => {
+      console.log(texture);
       var material = new THREE.MeshPhongMaterial({
         color: 0xe5c890,
         side: THREE.DoubleSide,
@@ -42,10 +46,22 @@ function main() {
       var plane = new THREE.Mesh(geometry, material);
       scene.add(plane);
       scene.add(line);
+      // document.body.appendChild(stats.dom)
+      const controls = new OrbitControls(camera, renderer.domElement);
       render();
       initLighting();
     });
 
+    function update() {
+      var delta = clock.getDelta();
+      var moveDistance = 50 * delta;
+    }
+
+    function animate() {
+      requestAnimationFrame(animate);
+      controls.update();
+      render();
+    }
     function initLighting() {
       var light = new THREE.DirectionalLight(0xffffff, 1);
       light.position.set(0, 1, 0);
@@ -76,6 +92,7 @@ function main() {
       var canvas = renderer.domElement;
       var width = canvas.clientWidth;
       var height = canvas.clientHeight;
+
       var needResize = canvas.width !== width || canvas.height !== height;
       if (needResize) {
         renderer.setSize(width, height, false);
@@ -89,7 +106,6 @@ function main() {
         camera.aspect = canvas.clientWidth / canvas.clientHeight;
         camera.updateProjectionMatrix();
       }
-
       renderer.render(scene, camera);
 
       requestAnimationFrame(render);

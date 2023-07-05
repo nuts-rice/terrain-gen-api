@@ -1,7 +1,7 @@
 #![feature(slice_pattern)]
 use actix_files::Files;
 use actix_web::{web, App, HttpResponse, HttpServer, Result};
-
+use clap::{Parser};
 use serde::{Deserialize, Serialize};
 use std::time::Instant;
 use terrain_gen_api::{configuration::get_config, routes::Heightmap};
@@ -15,6 +15,15 @@ pub struct FormData {
     spreadRate: f32,
 }
 
+#[derive(Parser, Debug)]
+struct Args {
+    #[arg(short, long)]
+    _exponent : i32,
+    #[arg(short, long)]
+    _spread : f32
+}
+
+
 #[derive(Serialize, Deserialize)]
 pub struct HeightmapResponse {
     url: String,
@@ -27,8 +36,9 @@ async fn main() -> std::io::Result<()> {
         .init();
     let config = get_config().expect("failed to read config");
     let address = format!("{}:{}", config.application.host, config.application.port);
-
-    let mut init_heightmap = Heightmap::new(7, 0.2).await.unwrap();
+    let args = Args::parse();
+    let mut init_heightmap = Heightmap::new(args._exponent, args._spread).await.unwrap();
+    info!("initializing heightmap with size of {} by {} and spread rate of {} ", args._exponent, args._exponent, args._spread);
     init_heightmap.midpnt_displacement().await.unwrap();
     init_heightmap
         .render_2d_test("./static/images/heightmap_test.png")
