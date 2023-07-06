@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+import { TransformControls } from 'three/addons/controls/TransformControls.js';
 main();
 function main() {
   try {
@@ -14,10 +15,10 @@ function main() {
       1000
     );
     var clock = new THREE.Clock();
-    var controls = new OrbitControls(camera, renderer.domElement);
+    var orbit = new OrbitControls(camera, renderer.domElement);
 
     camera.position.z = 100;
-    controls.update();
+    orbit.update();
     var scene = new THREE.Scene();
     scene.background = new THREE.Color(0x232634);
     var geometry = new THREE.PlaneGeometry(20, 20, 20, 20);
@@ -32,7 +33,7 @@ function main() {
     loader.load("static/images/heightmap_test.png", (texture) => {
       console.log(texture);
       var material = new THREE.MeshPhongMaterial({
-        color: 0xe5c890,
+        color: 0xA6D189,
         side: THREE.DoubleSide,
         displacementMap: texture,
         displacementScale: 40,
@@ -47,8 +48,103 @@ function main() {
       scene.add(plane);
       scene.add(line);
       // document.body.appendChild(stats.dom)
-      const controls = new OrbitControls(camera, renderer.domElement);
+      var controls = new TransformControls(camera, renderer.domElement);
+      controls.addEventListener("change", render);
+
+      controls.addEventListener("dragging-changed", function (event) {
+        orbit.enabled = !event.value;
+      });
+      controls.attach(plane);
+      scene.add(controls);
+      window.addEventListener("keydown", function (event) {
+        switch (event.keyCode) {
+          case 81: // Q
+            controls.setSpace(controls.space === "local" ? "world" : "local");
+            break;
+
+          case 16: // Shift
+            controls.setTranslationSnap(100);
+            controls.setRotationSnap(THREE.MathUtils.degToRad(15));
+            controls.setScaleSnap(0.25);
+            break;
+
+          case 87: // W
+            controls.setMode("translate");
+            break;
+
+          case 69: // E
+            controls.setMode("rotate");
+            break;
+
+          case 82: // R
+            controls.setMode("scale");
+            break;
+
+          // case 67: // C
+          //   const position = currentCamera.position.clone();
+
+          //   currentCamera = currentCamera.isPerspectiveCamera
+          //     ? cameraOrtho
+          //     : cameraPersp;
+          //   currentCamera.position.copy(position);
+
+          //   orbit.object = currentCamera;
+          //   controls.camera = currentCamera;
+
+          //   currentCamera.lookAt(
+          //     orbit.target.x,
+          //     orbit.target.y,
+          //     orbit.target.z
+          //   );
+          //   onWindowResize();
+          //   break;
+
+          case 86: // V
+            const randomFoV = Math.random() + 0.1;
+            const randomZoom = Math.random() + 0.1;
+
+            cameraPersp.fov = randomFoV * 160;
+            cameraOrtho.bottom = -randomFoV * 500;
+            cameraOrtho.top = randomFoV * 500;
+
+            cameraPersp.zoom = randomZoom * 5;
+            cameraOrtho.zoom = randomZoom * 5;
+            onWindowResize();
+            break;
+
+          case 187:
+          case 107: // +, =, num+
+            controls.setSize(controls.size + 0.1);
+            break;
+
+          case 189:
+          case 109: // -, _, num-
+            controls.setSize(Math.max(controls.size - 0.1, 0.1));
+            break;
+
+          case 88: // X
+            controls.showX = !controls.showX;
+            break;
+
+          case 89: // Y
+            controls.showY = !controls.showY;
+            break;
+
+          case 90: // Z
+            controls.showZ = !controls.showZ;
+            break;
+
+          case 32: // Spacebar
+            controls.enabled = !controls.enabled;
+            break;
+
+          case 27: // Esc
+            controls.reset();
+            break;
+        }
+      });
       render();
+      animate();
       initLighting();
     });
 
@@ -59,8 +155,8 @@ function main() {
 
     function animate() {
       requestAnimationFrame(animate);
-      controls.update();
-      render();
+      orbit.update();
+      renderer.render(scene, camera);
     }
     function initLighting() {
       var light = new THREE.DirectionalLight(0xffffff, 1);
@@ -86,6 +182,9 @@ function main() {
       var light = new THREE.DirectionalLight(0xffffff, 0.5);
       light.position.set(-1, 0, 0);
       scene.add(light);
+
+      var ambientLight = new THREE.AmbientLight(0x555555);
+      scene.add(ambientLight);
     }
 
     function resizeRendererToDisplaySize(renderer) {
