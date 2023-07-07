@@ -8,12 +8,13 @@ use serde::{Deserialize, Serialize};
 
 use std::fmt;
 use std::sync::Arc;
+
 //TODO: THIS BREAKS THINGS
 //use bevy_rapier3d::prelude::*;
 //use rapier3d::na::{Vector3, SquareMatrix};
 //use rapier3d::parry::utils::self.inner2;
 
-use image::{ImageBuffer, Rgb};
+use image::{ImageBuffer, Rgba};
 
 #[derive(serde::Deserialize)]
 pub struct FormData {
@@ -166,7 +167,6 @@ impl Heightmap {
                                     * self.spread_rate;
 
                                 *height = _square_average + displacement;
-                                tracing::debug!("Height : {}", height);
                                 // if j > step / 2 {
                                 //     let diamond_average = (self.inner[[i - step / 2, j]]
                                 //         + self.inner[[i + step / 2, j]]
@@ -204,15 +204,15 @@ impl Heightmap {
     pub async fn render(&self, file_path: &str) -> Result<(), Error> {
         let mut _rng = rand::thread_rng();
         let mut img = ImageBuffer::new(self.inner.x as u32, self.inner.y as u32);
-        let mut color_grad = [0, 0, 0];
+        let mut rgba_grad = [0, 0, 0, 0];
 
         for (x, y, pixel) in img.enumerate_pixels_mut() {
             let height = self.heights[x as usize][y as usize];
             let gray_value = (height * 255.0) as u8;
-            let color_grad_index = _rng.gen_range(0..3);
-            color_grad[color_grad_index] = gray_value;
+            let rgba_grad_index = _rng.gen_range(0..4);
+            rgba_grad[rgba_grad_index] = gray_value;
             // tracing::debug!("gray val: {}", gray_value);
-            *pixel = Rgb(color_grad);
+            *pixel = Rgba(rgba_grad);
             let _data = pixel.0;
             // tracing::debug!("color vals: {:?}", data);
         }
@@ -225,7 +225,7 @@ impl Heightmap {
         for (x, y, pixel) in img.enumerate_pixels_mut() {
             let height = self.heights[x as usize][y as usize];
             let gray_value = (height * 255.0) as u8;
-            *pixel = Rgb([gray_value, gray_value, gray_value]);
+            *pixel = Rgba([gray_value, gray_value, gray_value, gray_value]);
         }
         img.save(file_path).expect("error in rendering");
         Ok(())
@@ -247,6 +247,7 @@ impl Heightmap {
             heights: flat_land.clone(),
         })
     }
+
 
     //Testing purposes
     // pub async fn render_3d_arc(&self) -> Result<(), Error> {

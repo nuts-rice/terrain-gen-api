@@ -1,4 +1,4 @@
-#![feature(slice_pattern)]
+// #![feature(slice_pattern)]
 use actix_files::Files;
 use actix_web::{web, App, HttpResponse, HttpServer, Result};
 use clap::Parser;
@@ -37,16 +37,16 @@ async fn main() -> std::io::Result<()> {
     let address = format!("{}:{}", config.application.host, config.application.port);
     let args = Args::parse();
     let mut init_heightmap = Heightmap::new(args._exponent, args._spread).await.unwrap();
-    info!(
-        "initializing heightmap with size of {} by {} and spread rate of {} ",
-        args._exponent, args._exponent, args._spread
-    );
+    let _now = Instant::now();
     init_heightmap.midpnt_displacement().await.unwrap();
+    let _elapsed = _now.elapsed();
+    info!("midpnt displacement took {} milliseconds", _elapsed.as_millis());
     init_heightmap
         .render_2d_test("./static/images/heightmap_test.png")
         .await
         .unwrap();
-
+    info!("displaying 2d heightmap (init)");
+    println!("{}", init_heightmap);
     info!("spawing server at {}", address);
     HttpServer::new(|| {
         App::new()
@@ -65,6 +65,7 @@ async fn main() -> std::io::Result<()> {
     .bind(address)?
     .run()
     .await
+
 }
 
 async fn index() -> Result<HttpResponse> {
@@ -104,6 +105,7 @@ async fn handle_form(params: web::Form<FormData>) -> Result<HttpResponse> {
 
     Ok(HttpResponse::Ok().json(response.await.unwrap()))
 }
+
 
 //let subscriber = get_subscriber(1, "info".into(), std::io::stdout);
 //init_subscriber(subscriber);

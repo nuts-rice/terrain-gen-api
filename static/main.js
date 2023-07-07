@@ -32,12 +32,16 @@ function main() {
     var loader = new THREE.TextureLoader();
     loader.load("static/images/heightmap_test.png", (texture) => {
       console.log(texture);
+      texture.wrapS = THREE.ClampToEdgeWrapping;
+      texture.wrapT = THREE.ClampToEdgeWrapping;
+      texture.colorSpace = THREE.SRGBColorSpace;
       var material = new THREE.MeshPhongMaterial({
         color: 0xA6D189,
         side: THREE.DoubleSide,
         displacementMap: texture,
         displacementScale: 40,
       });
+
       var wireframe = new THREE.WireframeGeometry(geometry);
       var line = new THREE.LineSegments(wireframe);
       line.material.depthTest = false;

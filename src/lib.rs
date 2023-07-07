@@ -1,4 +1,4 @@
-#![feature(slice_pattern)]
+// #![feature(slice_pattern)]
 
 // #![feature(lazy_cell)]
 // use std::sync::LazyLock;
