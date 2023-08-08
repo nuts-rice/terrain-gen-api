@@ -14,6 +14,7 @@ use std::sync::Arc;
 //use rapier3d::na::{Vector3, SquareMatrix};
 //use rapier3d::parry::utils::self.inner2;
 
+//TODO: use seed for gen
 use image::{ImageBuffer, Rgba};
 
 #[derive(serde::Deserialize)]
@@ -114,6 +115,7 @@ pub struct Heightmap {
     spread_rate: f32,
     inner: Vector2<usize>,
     heights: Vec<Vec<f32>>,
+    seed: u64,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -131,11 +133,13 @@ impl Heightmap {
             _spread_rate
         );
         let _heights = vec![vec![0.0; _size]; _size];
+        let _seed = 0u64;
         Ok(Heightmap {
             size: exponent,
             spread_rate: _spread_rate,
             inner: Vector2 { x: _size, y: _size },
             heights: _heights,
+            seed: _seed 
         })
     }
 
@@ -247,7 +251,6 @@ impl Heightmap {
             heights: flat_land.clone(),
         })
     }
-
 
     //Testing purposes
     // pub async fn render_3d_arc(&self) -> Result<(), Error> {

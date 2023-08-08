@@ -1,5 +1,4 @@
-use criterion::{criterion_group,
-criterion_main, Criterion};
+use criterion::{criterion_group, criterion_main, Criterion};
 use futures::executor::block_on;
 use terrain_gen_api::routes::height_map;
 pub async fn midpnt_displacement_bench(c: &mut Criterion) {
@@ -10,8 +9,6 @@ pub async fn midpnt_displacement_bench(c: &mut Criterion) {
     });
 
     group.finish();
-
-    
 }
 
 criterion_group!(benches, midpnt_displacement_bench);

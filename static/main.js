@@ -1,6 +1,9 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { TransformControls } from 'three/addons/controls/TransformControls.js';
+import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
+let stats;
+
 main();
 function main() {
   try {
@@ -42,15 +45,15 @@ function main() {
         displacementScale: 40,
       });
 
-      var wireframe = new THREE.WireframeGeometry(geometry);
-      var line = new THREE.LineSegments(wireframe);
-      line.material.depthTest = false;
-      line.material.opacity = 0.25;
-      line.material.transparent = true;
+      // var wireframe = new THREE.WireframeGeometry(geometry);
+      // var line = new THREE.LineSegments(wireframe);
+      // line.material.depthTest = false;
+      // line.material.opacity = 0.25;
+      // line.material.transparent = true;
 
       var plane = new THREE.Mesh(geometry, material);
       scene.add(plane);
-      scene.add(line);
+      // scene.add(line);
       // document.body.appendChild(stats.dom)
       var controls = new TransformControls(camera, renderer.domElement);
       controls.addEventListener("change", render);
@@ -151,6 +154,12 @@ function main() {
       animate();
       initLighting();
     });
+    function initTexture(data, width, height) {
+      let context, image, imageData, shade;
+    }
+    function initGui() {
+      const gui = new GUI; 
+    }
 
     function update() {
       var delta = clock.getDelta();
@@ -209,6 +218,11 @@ function main() {
         camera.aspect = canvas.clientWidth / canvas.clientHeight;
         camera.updateProjectionMatrix();
       }
+      const time = - performance.now() * 0.0003;
+      camera.position.x = 400 * Math.cos( time );
+      camera.position.z = 400 * Math.sin( time );
+      camera.lookAt( scene.position );
+
       renderer.render(scene, camera);
 
       requestAnimationFrame(render);

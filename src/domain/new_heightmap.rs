@@ -86,7 +86,7 @@ impl NewHeightmap {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use claims::{assert_err};
+    use claims::assert_err;
 
     // #[test]
     // fn size_greater_than_256_test() {
