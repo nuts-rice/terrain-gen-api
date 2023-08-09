@@ -2,8 +2,8 @@
 use actix_files::Files;
 use actix_web::{web, App, HttpResponse, HttpServer, Result};
 use clap::Parser;
-use rand::rngs::SmallRng;
-use rand::{Rng, SeedableRng};
+
+use rand::{Rng};
 use serde::{Deserialize, Serialize};
 use std::time::Instant;
 use terrain_gen_api::{configuration::get_config, routes::Heightmap};
@@ -15,18 +15,20 @@ const MAX_SIZE: usize = 256;
 pub struct FormData {
     exponent: i32,
     spreadRate: f32,
+    seed: u64,
 }
 
 #[derive(Parser, Debug)]
 struct Args {
     #[arg(short, long)]
     _exponent: i32,
-    #[arg(short, long)]
+    #[arg(short = 'r', long)]
     _spread: f32,
-    #[arg(short, long)]
-    _method: String,
-    // #[arg(short,long)]
-    // _seed: u64,
+    //TODO: user input for method (midpoint or wfc) and seed
+    // #[arg(short, long)]
+    // _method: String,
+    #[arg(short = 's', long)]
+    _seed: Option<u64>,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -39,13 +41,14 @@ async fn main() -> std::io::Result<()> {
     tracing_subscriber::fmt()
         .with_max_level(tracing::Level::DEBUG)
         .init();
-    let mut rng = SmallRng::from_entropy();
     let config = get_config().expect("failed to read config");
-    let seed: u64 = rng.gen();
     let address = format!("{}:{}", config.application.host, config.application.port);
     let args = Args::parse();
-    let mut init_heightmap = Heightmap::new(args._exponent, args._spread).await.unwrap();
-    println!("Seed: {}", seed);
+    let seed = args._seed.unwrap_or_else(|| rand::thread_rng().gen());
+    let mut init_heightmap = Heightmap::new(args._exponent, args._spread, seed)
+        .await
+        .unwrap();
+    tracing::info!("Seed: {}", seed);
     let _now = Instant::now();
     init_heightmap.midpnt_displacement().await.unwrap();
     let _elapsed = _now.elapsed();
@@ -86,7 +89,7 @@ async fn index() -> Result<HttpResponse> {
 }
 
 async fn handle_form(params: web::Form<FormData>) -> Result<HttpResponse> {
-    let mut heightmap = Heightmap::new(params.exponent, params.spreadRate)
+    let mut heightmap = Heightmap::new(params.exponent, params.spreadRate, params.seed)
         .await
         .unwrap();
     let _time_midpnt = Instant::now();

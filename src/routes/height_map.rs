@@ -1,11 +1,12 @@
 use actix_web::{http::header::ContentType, post, web, Error, HttpResponse, Result};
 
 use cgmath::Vector2;
-use rand::Rng;
+
+use rand::{Rng, SeedableRng};
+use rand_xorshift::XorShiftRng;
 use rapier3d::prelude::*;
 use rayon::prelude::*;
 use serde::{Deserialize, Serialize};
-
 use std::fmt;
 use std::sync::Arc;
 
@@ -124,22 +125,22 @@ pub struct HeightsResponse {
 }
 
 impl Heightmap {
-    pub async fn new(exponent: i32, _spread_rate: f32) -> Result<Heightmap, Error> {
+    pub async fn new(exponent: i32, _spread_rate: f32, _seed: u64) -> Result<Heightmap, Error> {
         let _size = 2_i32.pow(exponent.try_into().unwrap()) as usize;
         tracing::info!(
-            "creating heightmap of {} by {} with spread rate of {}",
+            "creating heightmap of {} by {} with spread rate of {}, Seed: {}",
             exponent,
             exponent,
-            _spread_rate
+            _spread_rate,
+            _seed
         );
         let _heights = vec![vec![0.0; _size]; _size];
-        let _seed = 0u64;
         Ok(Heightmap {
             size: exponent,
             spread_rate: _spread_rate,
             inner: Vector2 { x: _size, y: _size },
             heights: _heights,
-            seed: _seed 
+            seed: _seed,
         })
     }
 
@@ -164,7 +165,7 @@ impl Heightmap {
                     if Self::is_in_range(i, curr_step, self.inner.x) {
                         row.par_iter_mut().enumerate().for_each(|(j, height)| {
                             if Self::is_in_range(j, curr_step, self.inner.y) {
-                                let mut _rng = rand::thread_rng();
+                                let mut _rng = XorShiftRng::seed_from_u64(self.seed);
                                 let _square_average = (*height + resolution / 2.0) / 4.0;
                                 let displacement = (_rng.gen_range(0.0..1.0) - 0.5)
                                     * resolution
@@ -282,15 +283,16 @@ impl fmt::Display for Heightmap {
 }
 
 #[post("/new_heightmap/{exponent}/{spread_rate}")]
-pub async fn new_heightmap(path: web::Path<(i32, f32)>) -> Result<HttpResponse, Error> {
-    let (exponent, spread_rate) = path.into_inner();
+pub async fn new_heightmap(path: web::Path<(i32, f32, u64)>) -> Result<HttpResponse, Error> {
+    let (exponent, spread_rate, seed) = path.into_inner();
     tracing::info!(
-        "creating heightmap of {} by {} with spread rate of {}",
+        "creating heightmap of {} by {} with spread rate of {}, Seed: {}",
         exponent,
         exponent,
-        spread_rate
+        spread_rate,
+        seed
     );
-    let mut heightmap = Heightmap::new(exponent, spread_rate).await.unwrap();
+    let mut heightmap = Heightmap::new(exponent, spread_rate, seed).await.unwrap();
     heightmap
         .midpnt_displacement()
         .await
