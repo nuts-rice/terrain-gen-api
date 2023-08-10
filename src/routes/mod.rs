@@ -5,3 +5,4 @@ pub mod wave_fn;
 // pub use ec::*;
 pub use health_check::*;
 pub use height_map::*;
+pub use wave_fn::*;

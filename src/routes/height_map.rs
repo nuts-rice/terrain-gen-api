@@ -2,7 +2,8 @@ use actix_web::{http::header::ContentType, post, web, Error, HttpResponse, Resul
 
 use cgmath::Vector2;
 
-use rand::{Rng, SeedableRng};
+use rand::{seq::SliceRandom, Rng, SeedableRng};
+use rand_chacha::ChaCha20Rng;
 use rand_xorshift::XorShiftRng;
 use rapier3d::prelude::*;
 use rayon::prelude::*;
@@ -16,7 +17,7 @@ use std::sync::Arc;
 //use rapier3d::parry::utils::self.inner2;
 
 //TODO: use seed for gen
-use image::{ImageBuffer, Rgba};
+use image::{DynamicImage, ImageBuffer, Rgba};
 
 #[derive(serde::Deserialize)]
 pub struct FormData {
@@ -155,6 +156,7 @@ impl Heightmap {
 
     pub async fn midpnt_displacement(&mut self) -> Result<(), Error> {
         let mut resolution = 2_f32.powf(self.size as f32) - 1.0;
+        let mut _rng: ChaCha20Rng = rand::SeedableRng::seed_from_u64(self.seed);
         let _step = self.size;
         while resolution > 1.0 {
             let curr_step: usize = (resolution / 2.0).round() as usize;
@@ -165,9 +167,8 @@ impl Heightmap {
                     if Self::is_in_range(i, curr_step, self.inner.x) {
                         row.par_iter_mut().enumerate().for_each(|(j, height)| {
                             if Self::is_in_range(j, curr_step, self.inner.y) {
-                                let mut _rng = XorShiftRng::seed_from_u64(self.seed);
                                 let _square_average = (*height + resolution / 2.0) / 4.0;
-                                let displacement = (_rng.gen_range(0.0..1.0) - 0.5)
+                                let displacement = (_rng.clone().gen_range(0.0..1.0) - 0.5)
                                     * resolution
                                     * self.spread_rate;
 
@@ -199,6 +200,14 @@ impl Heightmap {
                 });
             resolution /= 2.0;
         }
+        //TODO: need to shuffle this randomly
+        let mut shuffled_indices: Vec<_> = (0..self.heights.len()).collect();
+        shuffled_indices.shuffle(&mut _rng);
+        let shuffled_heights: Vec<_> = shuffled_indices
+            .iter()
+            .map(|&i| self.heights[i].clone())
+            .collect();
+        self.heights = shuffled_heights;
         Ok(())
     }
 
@@ -225,7 +234,7 @@ impl Heightmap {
         Ok(())
     }
 
-    pub async fn render_2d_test(&self, file_path: &str) -> Result<(), Error> {
+    pub async fn render_2d_test(&self, file_path: &str) -> Result<DynamicImage, Error> {
         let mut img = ImageBuffer::new(self.inner.x as u32, self.inner.y as u32);
         for (x, y, pixel) in img.enumerate_pixels_mut() {
             let height = self.heights[x as usize][y as usize];
@@ -233,7 +242,7 @@ impl Heightmap {
             *pixel = Rgba([gray_value, gray_value, gray_value, gray_value]);
         }
         img.save(file_path).expect("error in rendering");
-        Ok(())
+        Ok((DynamicImage::from(img)))
     }
 
     //TODO: Ok try to use Arc<[T]> here?

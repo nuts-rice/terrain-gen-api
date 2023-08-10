@@ -3,10 +3,10 @@ use actix_files::Files;
 use actix_web::{web, App, HttpResponse, HttpServer, Result};
 use clap::Parser;
 
-use rand::{Rng};
+use rand::Rng;
 use serde::{Deserialize, Serialize};
 use std::time::Instant;
-use terrain_gen_api::{configuration::get_config, routes::Heightmap};
+use terrain_gen_api::{configuration::get_config, routes::wave_fn::wfc, routes::Heightmap};
 use tracing::{debug, info};
 
 const MAX_SIZE: usize = 256;
@@ -35,6 +35,19 @@ struct Args {
 pub struct HeightmapResponse {
     url: String,
 }
+
+macro_rules! wfc {
+    ($img:ty) => {
+    if cfg!(feature = "wfc") {
+
+       wfc::gen_wfc_image($img, "wfc_img_test.png");
+    } else {
+        "not wfc".to_string()
+         $img
+    }
+    };
+}
+
 //TODO: route seed to heightmap , use xorshift to midpoint
 #[tokio::main]
 async fn main() -> std::io::Result<()> {
@@ -56,10 +69,16 @@ async fn main() -> std::io::Result<()> {
         "midpnt displacement took {} milliseconds",
         _elapsed.as_millis()
     );
-    init_heightmap
+    let mut img = init_heightmap
         .render_2d_test("./static/images/heightmap_test.png")
         .await
         .unwrap();
+    if cfg!(feature = "wfc") {
+        wfc::gen_wfc_image(img, "wfc_img_test.png");
+    } else {
+        "not wfc".to_string();
+    };
+
     info!("displaying 2d heightmap (init)");
     println!("{}", init_heightmap);
     info!("spawing server at {}", address);
