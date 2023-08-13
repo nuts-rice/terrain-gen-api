@@ -20,6 +20,7 @@ cgmath = "0.18.0"
 chrono = "0.4.24"
 clap = { version = "4.3.10", features = ["derive"] }
 config = "0.13.3"
+console-subscriber = "0.1.10"
 coord_2d = "0.3.6"
 criterion = { version = "0.5.1", features = ["async", "async-std", "async_tokio", "async_futures", "async_std"] }
 env_logger = "0.10.0"
@@ -42,7 +43,7 @@ serde-aux = "4"
 simple_logger = "4.1.0"
 test-log = { version = "0.2.11", features = ["trace"] }
 thiserror = "1.0.38"
-tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
+tokio = { version = "1.12", features = ["full", "tracing"] }
 tracing = "0.1.19"
 tracing-bunyan-formatter = "0.3.6"
 tracing-log = "0.1.3"
@@ -56,14 +57,21 @@ wasm-pack = "0.11.1"
 wfc = "0.10.7"
 wfc_image = "0.12.1"
 
+
 [[bench]]
 name = "benches"
 harness = false
+
+[build]
+rustflags = ["--cfg", "tokio_unstable"]
 
 [dev-dependencies]
 claims = "0.7.0"
 once_cell = "1.7.2"
 reqwest = {version = "0.11", features = ["json"]}
+
+[features]
+wfc = []
 
 [[test]]
 name = "integration"
@@ -71,3 +79,5 @@ path = "tests/test.rs"
 
 [lib]
 crate-type = ["cdylib", "rlib"]
+
+

@@ -17,7 +17,7 @@ use std::sync::Arc;
 //use rapier3d::parry::utils::self.inner2;
 
 //TODO: use seed for gen
-use image::{DynamicImage, ImageBuffer, Rgba};
+use image::{DynamicImage, ImageBuffer, Pixel, Rgb, Rgba};
 
 #[derive(serde::Deserialize)]
 pub struct FormData {
@@ -66,51 +66,17 @@ pub struct FormData {
 //      }
 // HttpResponse::Ok().finish()
 // }
+pub const WHITE: [u8; 3] = [255, 255, 255];
 
-// #[derive(Debug)]
-// pub struct ColorGradient {
-//     color_vals: Vec<[u8; 3]>,
-// }
-// impl ColorGradient {
-//     pub const WHITE: Self = Self {
-//         color_vals: vec![
-//             [255, 255, 255],
-//         ],
-//     };
+pub const BLACK: [u8; 3] = [0, 0, 0];
+pub const RED: [u8; 3] = [255, 0, 0];
+pub const GREEN: [u8; 3] = [0, 255, 0];
+pub const BLUE: [u8; 3] = [0, 0, 255];
+// Removed TRANSPARENT as transparency is not handled in RGB model.
 
-//     pub const BLACK: Self = Self {
-//         color_vals: vec![
-//             [0, 0, 0],
-//         ],
-//     };
+pub const ORANGE: [u8; 3] = [255, 69, 0];
 
-//     pub const RED: Self = Self {
-//         color_vals: vec![
-//             [255, 0, 0],
-//         ],
-//     };
-
-//     pub const GREEN: Self = Self {
-//         color_vals: vec![
-//             [0, 255, 0],
-//         ],
-//     };
-
-//     pub const BLUE: Self = Self {
-//         color_vals: vec![
-//             [0, 0, 255],
-//         ],
-//     };
-
-//     // Removed TRANSPARENT as transparency is not handled in RGB model.
-
-//     pub const ORANGE: Self = Self {
-//         color_vals: vec![
-//             [255, 69, 0],
-//         ],
-//     };
-//}
-
+//TODO: compute color gradient
 #[derive(Debug)]
 pub struct Heightmap {
     size: i32,
@@ -118,6 +84,7 @@ pub struct Heightmap {
     inner: Vector2<usize>,
     heights: Vec<Vec<f32>>,
     seed: u64,
+    colors: Vec<[u8; 3]>,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -136,12 +103,14 @@ impl Heightmap {
             _seed
         );
         let _heights = vec![vec![0.0; _size]; _size];
+        let _colors = vec![WHITE];
         Ok(Heightmap {
             size: exponent,
             spread_rate: _spread_rate,
             inner: Vector2 { x: _size, y: _size },
             heights: _heights,
             seed: _seed,
+            colors: _colors,
         })
     }
 
@@ -160,6 +129,7 @@ impl Heightmap {
         let _step = self.size;
         while resolution > 1.0 {
             let curr_step: usize = (resolution / 2.0).round() as usize;
+            let rng_val = _rng.gen_range(0.0..1.0);
             self.heights
                 .par_iter_mut()
                 .enumerate()
@@ -168,9 +138,7 @@ impl Heightmap {
                         row.par_iter_mut().enumerate().for_each(|(j, height)| {
                             if Self::is_in_range(j, curr_step, self.inner.y) {
                                 let _square_average = (*height + resolution / 2.0) / 4.0;
-                                let displacement = (_rng.clone().gen_range(0.0..1.0) - 0.5)
-                                    * resolution
-                                    * self.spread_rate;
+                                let displacement = (rng_val - 0.5) * resolution * self.spread_rate;
 
                                 *height = _square_average + displacement;
                                 // if j > step / 2 {
@@ -204,8 +172,8 @@ impl Heightmap {
         let mut shuffled_indices: Vec<_> = (0..self.heights.len()).collect();
         shuffled_indices.shuffle(&mut _rng);
         let shuffled_heights: Vec<_> = shuffled_indices
-            .iter()
-            .map(|&i| self.heights[i].clone())
+            .par_iter_mut()
+            .map(|&mut i| self.heights[i].clone())
             .collect();
         self.heights = shuffled_heights;
         Ok(())
@@ -232,6 +200,11 @@ impl Heightmap {
         }
         img.save(file_path).expect("error in rendering");
         Ok(())
+    }
+
+    //heights match to constants, using invariant coloring rules
+    pub async fn color_terrain(&self) -> Result<(), Error> {
+        unimplemented!()
     }
 
     pub async fn render_2d_test(&self, file_path: &str) -> Result<DynamicImage, Error> {

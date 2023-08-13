@@ -5,10 +5,14 @@ use clap::Parser;
 
 use rand::Rng;
 use serde::{Deserialize, Serialize};
-use std::time::Instant;
+use std::time::{Duration, Instant};
 use terrain_gen_api::{configuration::get_config, routes::wave_fn::wfc, routes::Heightmap};
-use tracing::{debug, info};
-
+use tokio::task;
+use tracing::{debug, info, trace};
+use tracing_subscriber::{
+    filter::{filter_fn, LevelFilter},
+    prelude::*,
+};
 const MAX_SIZE: usize = 256;
 
 #[derive(Serialize, Deserialize)]
@@ -36,7 +40,9 @@ pub struct HeightmapResponse {
     url: String,
 }
 
-macro_rules! wfc {
+#[cfg(feature = "wfc")]
+pub mod wfc {
+    macro_rules! wfc {
     ($img:ty) => {
     if cfg!(feature = "wfc") {
 
@@ -47,12 +53,16 @@ macro_rules! wfc {
     }
     };
 }
+}
 
 //TODO: route seed to heightmap , use xorshift to midpoint
 #[tokio::main]
 async fn main() -> std::io::Result<()> {
+    // let console_lyr = console_subscriber::spawn();
     tracing_subscriber::fmt()
+        // .with(console_lyr)
         .with_max_level(tracing::Level::DEBUG)
+        // .with(tracing_subscriber::fmt::Layer::default().pretty())
         .init();
     let config = get_config().expect("failed to read config");
     let address = format!("{}:{}", config.application.host, config.application.port);
@@ -76,7 +86,7 @@ async fn main() -> std::io::Result<()> {
     if cfg!(feature = "wfc") {
         wfc::gen_wfc_image(img, "wfc_img_test.png");
     } else {
-        "not wfc".to_string();
+        println!("Not WFC");
     };
 
     info!("displaying 2d heightmap (init)");

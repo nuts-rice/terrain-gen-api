@@ -33,3 +33,14 @@ pub mod wfc {
         wfc_img.save(output_path).expect("failed to save wfc image");
     }
 }
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn wfc_img_test() {
+        let img_path: &str = "../../heightmap.png";
+        let _img: image::DynamicImage = ImageReader::open(img_path)?.decode()?;
+    }
+}
