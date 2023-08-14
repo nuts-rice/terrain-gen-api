@@ -5,13 +5,11 @@ use clap::Parser;
 
 use rand::Rng;
 use serde::{Deserialize, Serialize};
-use std::time::{Instant};
+use std::time::Instant;
 use terrain_gen_api::{configuration::get_config, routes::wave_fn::wfc, routes::Heightmap};
 
 use tracing::{debug, info};
-use tracing_subscriber::{
-    prelude::*,
-};
+use tracing_subscriber::prelude::*;
 const MAX_SIZE: usize = 256;
 
 #[derive(Serialize, Deserialize)]

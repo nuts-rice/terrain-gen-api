@@ -71,20 +71,20 @@ pub const WHITE: [u8; 3] = [255, 255, 255];
 pub const BLACK: [u8; 3] = [0, 0, 0];
 pub const RED: [u8; 3] = [255, 0, 0];
 pub const GREEN: [u8; 3] = [0, 255, 0];
+pub const LIGHT_GREEN: [u8; 3] = [0, 125, 0];
 pub const BLUE: [u8; 3] = [0, 0, 255];
-// Removed TRANSPARENT as transparency is not handled in RGB model.
 
 pub const ORANGE: [u8; 3] = [255, 69, 0];
 
 //TODO: compute color gradient
 #[derive(Debug)]
 pub struct Heightmap {
-    size: i32,
+    size: usize,
     spread_rate: f32,
     inner: Vector2<usize>,
     heights: Vec<Vec<f32>>,
     seed: u64,
-    colors: Vec<[u8; 3]>,
+    pub colors: Vec<Rgb<u8>>,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -103,9 +103,9 @@ impl Heightmap {
             _seed
         );
         let _heights = vec![vec![0.0; _size]; _size];
-        let _colors = vec![WHITE];
+        let _colors = vec![Rgb::from(WHITE)];
         Ok(Heightmap {
-            size: exponent,
+            size: _size,
             spread_rate: _spread_rate,
             inner: Vector2 { x: _size, y: _size },
             heights: _heights,
@@ -130,46 +130,45 @@ impl Heightmap {
         while resolution > 1.0 {
             let curr_step: usize = (resolution / 2.0).round() as usize;
             let rng_val = _rng.gen_range(0.0..1.0);
-            self.heights
-                .par_iter_mut()
-                .enumerate()
-                .for_each(|(i, row)| {
-                    if Self::is_in_range(i, curr_step, self.inner.x) {
-                        row.par_iter_mut().enumerate().for_each(|(j, height)| {
-                            if Self::is_in_range(j, curr_step, self.inner.y) {
-                                let _square_average = (*height + resolution / 2.0) / 4.0;
-                                let displacement = (rng_val - 0.5) * resolution * self.spread_rate;
+            self.heights.iter_mut().enumerate().for_each(|(i, row)| {
+                if Self::is_in_range(i, curr_step, self.inner.x) {
+                    row.iter_mut().enumerate().for_each(|(j, height)| {
+                        if Self::is_in_range(j, curr_step, self.inner.y) {
+                            let _square_average = (*height + resolution / 2.0) / 4.0;
+                            let displacement = (rng_val - 0.5) * resolution * self.spread_rate;
 
-                                *height = _square_average + displacement;
-                                // let color = color_pixel()
-                                // if j > step / 2 {
-                                //     let diamond_average = (self.inner[[i - step / 2, j]]
-                                //         + self.inner[[i + step / 2, j]]
-                                //         + self.inner[[i, j - step / 2]]
-                                //         + self.inner[[i, j + step / 2]])
-                                //         / 4.0;
-                                //     let displacement =
-                                //         (_rng.gen_range(0.0..1.0) - 0.5) * step as f64 * self.spread_rate;
-                                //     self.inner[[i, j - step / 2]] = diamond_average + displacement;
-                                // }
+                            *height = _square_average + displacement;
+                            let pixel_color = Self::compute_color(*height).unwrap();
+                            self.colors.push(pixel_color);
+                            // self.colors.push(pixel_color)
+                            // let color = color_pixel()
+                            // if j > step / 2 {
+                            //     let diamond_average = (self.inner[[i - step / 2, j]]
+                            //         + self.inner[[i + step / 2, j]]
+                            //         + self.inner[[i, j - step / 2]]
+                            //         + self.inner[[i, j + step / 2]])
+                            //         / 4.0;
+                            //     let displacement =
+                            //         (_rng.gen_range(0.0..1.0) - 0.5) * step as f64 * self.spread_rate;
+                            //     self.inner[[i, j - step / 2]] = diamond_average + displacement;
+                            // }
 
-                                // if i > step / 2 {
-                                //     let diamond_average = (self.inner[[i - step / 2, j]]
-                                //         + self.inner[[i + step / 2, j]]
-                                //         + self.inner[[i, j - step / 2]]
-                                //         + self.inner[[i, j + step / 2]])
-                                //         / 4.0;
-                                //     let displacement =
-                                //         (_rng.gen_range(1.0..1.0) - 0.5) * step as f64 * self.spread_rate;
-                                //     self.inner[[i - step / 2, j]] = diamond_average + displacement;
-                                // }
-                            }
-                        });
-                    }
-                });
+                            // if i > step / 2 {
+                            //     let diamond_average = (self.inner[[i - step / 2, j]]
+                            //         + self.inner[[i + step / 2, j]]
+                            //         + self.inner[[i, j - step / 2]]
+                            //         + self.inner[[i, j + step / 2]])
+                            //         / 4.0;
+                            //     let displacement =
+                            //         (_rng.gen_range(1.0..1.0) - 0.5) * step as f64 * self.spread_rate;
+                            //     self.inner[[i - step / 2, j]] = diamond_average + displacement;
+                            // }
+                        }
+                    });
+                }
+            });
             resolution /= 2.0;
         }
-        //TODO: need to shuffle this randomly
         let mut shuffled_indices: Vec<_> = (0..self.heights.len()).collect();
         shuffled_indices.shuffle(&mut _rng);
         let shuffled_heights: Vec<_> = shuffled_indices
@@ -177,6 +176,7 @@ impl Heightmap {
             .map(|&mut i| self.heights[i].clone())
             .collect();
         self.heights = shuffled_heights;
+        tracing::debug!("colors are {:?}", self.colors);
         Ok(())
     }
 
@@ -203,9 +203,34 @@ impl Heightmap {
         Ok(())
     }
 
-    //computes color for pixel only, then passes that up in midpoint displacement
-    pub async fn color_pixel(&self) -> Result<[u8; 3], Error> {
-        unimplemented!()
+    //TODO: inmutable for computing color at position
+    //Rgb colors for pixel only, then passes that up in midpoint displacement
+    fn compute_color(height: f32) -> Result<Rgb<u8>, Error> {
+        let normalized_height = height * 255.0 / 2.0;
+        tracing::debug!("normalized height for rgb is : {}", normalized_height);
+        if normalized_height > 80.0 {
+            tracing::info!("Snow cap");
+            Ok(Rgb::from(WHITE))
+        } else if normalized_height > 70.0 {
+            tracing::info!("Mountain");
+            Ok(Rgb::from(ORANGE))
+        } else if normalized_height > 50.0 {
+            tracing::info!("Hill");
+            Ok(Rgb::from(GREEN))
+        } else if normalized_height > 20.0 {
+            tracing::info!("Valley");
+            Ok(Rgb::from(LIGHT_GREEN))
+        } else {
+            tracing::info!("Water");
+            Ok(Rgb::from(BLUE))
+        }
+        // match normalized_height {
+
+        // }
+        // let _rgb = Rgb::from([normalized_x, normalized_y, normalized_height]);
+        // tracing::info!("rgb value : {:?}", _rgb);
+
+        // Ok(_rgb)
     }
 
     //heights match to constants, using invariant coloring rules
@@ -269,6 +294,7 @@ impl fmt::Display for Heightmap {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         for (i, row) in self.heights.iter().enumerate() {
             let flat_land: Vec<String> = row.iter().map(|h| h.to_string()).collect();
+            // let _colors: Vec<String> =
             write!(f, "height at x:{} : {}\n", i, flat_land.join(", "))?;
         }
         Ok(())
