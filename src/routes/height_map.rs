@@ -141,6 +141,7 @@ impl Heightmap {
                                 let displacement = (rng_val - 0.5) * resolution * self.spread_rate;
 
                                 *height = _square_average + displacement;
+                                // let color = color_pixel()
                                 // if j > step / 2 {
                                 //     let diamond_average = (self.inner[[i - step / 2, j]]
                                 //         + self.inner[[i + step / 2, j]]
@@ -202,10 +203,25 @@ impl Heightmap {
         Ok(())
     }
 
-    //heights match to constants, using invariant coloring rules
-    pub async fn color_terrain(&self) -> Result<(), Error> {
+    //computes color for pixel only, then passes that up in midpoint displacement
+    pub async fn color_pixel(&self) -> Result<[u8; 3], Error> {
         unimplemented!()
     }
+
+    //heights match to constants, using invariant coloring rules
+    // pub async fn color_terrain(&self) -> Result<(), Error> {
+    //     self.heights
+    //             .par_iter_mut()
+    //             .enumerate()
+    //             .for_each(|(i, row)| {
+    //                 if Self::is_in_range(i, curr_step, self.inner.x) {
+    //                     row.par_iter_mut().enumerate().for_each(|(j, height)| {
+    //                         if Self::is_in_range(j, curr_step, self.inner.y) {
+    //                         }
+    //                     }
+    //                     }
+    //                     unimplemented!()
+    // }
 
     pub async fn render_2d_test(&self, file_path: &str) -> Result<DynamicImage, Error> {
         let mut img = ImageBuffer::new(self.inner.x as u32, self.inner.y as u32);
@@ -248,21 +264,37 @@ impl Heightmap {
     // }
 }
 
+//TODO: Format to serialized dimensions
 impl fmt::Display for Heightmap {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let flat_land: Arc<[f32]> =
-            Arc::from(self.heights.iter().flatten().copied().collect::<Vec<f32>>());
-        write!(
-            f,
-            "heights: {:?}",
-            flat_land
-                .iter()
-                .map(|h| h.to_string())
-                .collect::<Vec<_>>()
-                .join(", ")
-        )
+        for (i, row) in self.heights.iter().enumerate() {
+            let flat_land: Vec<String> = row.iter().map(|h| h.to_string()).collect();
+            write!(f, "height at x:{} : {}\n", i, flat_land.join(", "))?;
+        }
+        Ok(())
     }
 }
+// let flat_land: Arc<()> =
+//     Arc::from(self.heights.iter().enumerate()).for_each(|(i, row)|{
+//         // .copied().collect::<Vec<f32>>());
+
+// write!(
+//     f,
+//     "height at x:{} : {:?}",
+//     i,
+//     flat_land
+//         .iter()
+//         .map(|h| h.to_string())
+//         .collect::<Vec<_>>()
+
+//         .join(", ")
+
+//     );
+
+// }
+// }
+
+// }
 
 #[post("/new_heightmap/{exponent}/{spread_rate}")]
 pub async fn new_heightmap(path: web::Path<(i32, f32, u64)>) -> Result<HttpResponse, Error> {

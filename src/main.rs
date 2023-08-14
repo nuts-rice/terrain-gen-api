@@ -5,12 +5,11 @@ use clap::Parser;
 
 use rand::Rng;
 use serde::{Deserialize, Serialize};
-use std::time::{Duration, Instant};
+use std::time::{Instant};
 use terrain_gen_api::{configuration::get_config, routes::wave_fn::wfc, routes::Heightmap};
-use tokio::task;
-use tracing::{debug, info, trace};
+
+use tracing::{debug, info};
 use tracing_subscriber::{
-    filter::{filter_fn, LevelFilter},
     prelude::*,
 };
 const MAX_SIZE: usize = 256;
@@ -79,7 +78,7 @@ async fn main() -> std::io::Result<()> {
         "midpnt displacement took {} milliseconds",
         _elapsed.as_millis()
     );
-    let mut img = init_heightmap
+    let img = init_heightmap
         .render_2d_test("./static/images/heightmap_test.png")
         .await
         .unwrap();
