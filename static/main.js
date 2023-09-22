@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
-import { TransformControls } from 'three/addons/controls/TransformControls.js';
-import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
+import { TransformControls } from "three/addons/controls/TransformControls.js";
+import { GUI } from "three/addons/libs/lil-gui.module.min.js";
 let stats;
 
 main();
@@ -25,21 +25,38 @@ function main() {
     var scene = new THREE.Scene();
     scene.background = new THREE.Color(0x232634);
     var geometry = new THREE.PlaneGeometry(20, 20, 20, 20);
-
-    //testing geometry render
-
-    // var test_geometry = new THREE.IcosahedronGeometry(20, 0);
-    // var test_material = new THREE.MeshNormalMaterial();
-    // var test_icoshahedron = new THREE.Mesh(test_geometry, test_material);
-    // scene.add(test_icoshahedron);
+    // var data = new HeightmapState;
+    // var colors =  data.colors;
+    // console.log(colors);
     var loader = new THREE.TextureLoader();
+    var img = new Image();
+    img.onload = function () {
+  
+     //get height data from img
+     var data = getHeightData(img);
+  
+     // plane
+     var geometry = new THREE.PlaneGeometry(10,10,9,9);
+     var texture = THREE.ImageUtils.loadTexture('images/heightmap2.png' );
+     var material = new THREE.MeshLambertMaterial( { map: texture } );
+     plane = new THREE.Mesh( geometry, material );
+     
+     //set height of vertices
+     for ( var i = 0; i<plane.geometry.vertices.length; i++ ) {
+          plane.geometry.vertices[i].z = data[i];
+     }
+
+     scene.add(plane);
+   
+ };
+    img.src = "static/images/heightmap_test.png";
     loader.load("static/images/heightmap_test.png", (texture) => {
       console.log(texture);
       texture.wrapS = THREE.ClampToEdgeWrapping;
       texture.wrapT = THREE.ClampToEdgeWrapping;
       texture.colorSpace = THREE.SRGBColorSpace;
       var material = new THREE.MeshPhongMaterial({
-        color: 0xA6D189,
+        color: 0xa6d189,
         side: THREE.DoubleSide,
         displacementMap: texture,
         displacementScale: 40,
@@ -157,8 +174,10 @@ function main() {
     function initTexture(data, width, height) {
       let context, image, imageData, shade;
     }
+
+    function color_terrain() {}
     function initGui() {
-      const gui = new GUI; 
+      const gui = new GUI();
     }
 
     function update() {
@@ -166,6 +185,35 @@ function main() {
       var moveDistance = 50 * delta;
     }
 
+     function getHeightData(img,scale) {
+     
+     if (scale == undefined) scale=1;
+     
+        var canvas = document.createElement( 'canvas' );
+        canvas.width = img.width;
+        canvas.height = img.height;
+        var context = canvas.getContext( '2d' );
+
+        var size = img.width * img.height;
+        var data = new Float32Array( size );
+
+        context.drawImage(img,0,0);
+
+        for ( var i = 0; i < size; i ++ ) {
+            data[i] = 0
+        }
+
+        var imgd = context.getImageData(10, 20, img.width, img.height);
+        var pix = imgd.data;
+
+        var j=0;
+        for (var i = 0; i<pix.length; i +=4) {
+            var all = pix[i]+pix[i+1]+pix[i+2];
+            data[j++] = all/(12*scale);
+        }
+        
+        return data;
+    }
     function animate() {
       requestAnimationFrame(animate);
       orbit.update();
@@ -218,10 +266,10 @@ function main() {
         camera.aspect = canvas.clientWidth / canvas.clientHeight;
         camera.updateProjectionMatrix();
       }
-      const time = - performance.now() * 0.0003;
-      camera.position.x = 400 * Math.cos( time );
-      camera.position.z = 400 * Math.sin( time );
-      camera.lookAt( scene.position );
+      const time = -performance.now() * 0.0003;
+      camera.position.x = 400 * Math.cos(time);
+      camera.position.z = 400 * Math.sin(time);
+      camera.lookAt(scene.position);
 
       renderer.render(scene, camera);
 

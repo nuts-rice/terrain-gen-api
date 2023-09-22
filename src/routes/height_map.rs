@@ -77,7 +77,7 @@ pub const BLUE: [u8; 3] = [0, 0, 255];
 pub const ORANGE: [u8; 3] = [255, 69, 0];
 
 //TODO: compute color gradient
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct Heightmap {
     size: usize,
     spread_rate: f32,
@@ -276,6 +276,9 @@ impl Heightmap {
         })
     }
 
+    pub async fn fbm_test(&self) -> Result<(), Error> {
+        unimplemented!()
+    }
     //Testing purposes
     // pub async fn render_3d_arc(&self) -> Result<(), Error> {
     //     let ground_size = Vector::new(100.0, 1.0, 100.0);

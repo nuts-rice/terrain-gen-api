@@ -1,6 +1,6 @@
 // #![feature(slice_pattern)]
 use actix_files::Files;
-use actix_web::{web, App, HttpResponse, HttpServer, Result};
+use actix_web::{error, web, App, HttpResponse, HttpServer, Result};
 use clap::Parser;
 
 use rand::Rng;
@@ -35,6 +35,11 @@ struct Args {
 #[derive(Serialize, Deserialize)]
 pub struct HeightmapResponse {
     url: String,
+}
+
+#[derive(Clone)]
+struct HeightmapState {
+    heightmap: Heightmap,
 }
 
 #[cfg(feature = "wfc")]
@@ -79,7 +84,10 @@ async fn main() -> std::io::Result<()> {
     let img = init_heightmap
         .render_2d_test("./static/images/heightmap_test.png")
         .await
-        .unwrap();
+        .expect("error in generating 2d image");
+    let data = HeightmapState {
+        heightmap: init_heightmap,
+    };
     if cfg!(feature = "wfc") {
         wfc::gen_wfc_image(img, "wfc_img_test.png");
     } else {
@@ -87,11 +95,24 @@ async fn main() -> std::io::Result<()> {
     };
 
     info!("displaying 2d heightmap (init)");
-    println!("{}", init_heightmap);
+    // println!("{}", init_heightmap.clone());
     info!("spawing server at {}", address);
-    HttpServer::new(|| {
+    let json_config = web::JsonConfig::default()
+        .limit(4096)
+        .error_handler(|err, _req| {
+            // create custom error response
+            error::InternalError::from_response(err, HttpResponse::Conflict().finish()).into()
+        });
+
+    HttpServer::new(move || {
         App::new()
+            // .service(
+            // web::resource("/")
+            //     .app_data(json_config)
+            //     .route(web::post().to(index)),
+            //     )
             // web::scope("/")
+            .app_data(web::Data::new(data.clone()))
             .service(Files::new("/static", "./static").show_files_listing())
             .service(Files::new("/static", "./static/www").show_files_listing())
             .service(Files::new("/static", "./static/images").show_files_listing())
@@ -106,6 +127,14 @@ async fn main() -> std::io::Result<()> {
     .bind(address)?
     .run()
     .await
+}
+
+// async fn fetch_colors(data: web::Json<HeightmapState>) ->  Result<String> {
+//     Ok(format!("Colors are : {:?}", data.heightmap.colors));
+// }
+
+async fn show_color(data: web::Data<HeightmapState>) -> Result<String> {
+    Ok(format!("colors are {:?}", data.heightmap.colors))
 }
 
 async fn index() -> Result<HttpResponse> {
